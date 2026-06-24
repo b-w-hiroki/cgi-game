@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="Shift_JIS">
+<meta charset="UTF-8">
+<title>★ 勇者の試練 ～CGI冒険記～ ★</title>
+<style>
+  body {
+    background-color: #c0c0c0;
+    font-family: "MS ゴシック", "ＭＳ ゴシック", monospace;
+    font-size: 13px;
+    color: #000080;
+    margin: 0;
+    padding: 8px;
+  }
+  .window {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 2px;
+  }
+  .title-bar {
+    background: linear-gradient(to right, #000080, #1084d0);
+    color: white;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 3px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: "MS ゴシック", monospace;
+  }
+  .title-btn {
+    background: #c0c0c0;
+    border: 1px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    color: #000;
+    font-size: 10px;
+    width: 16px;
+    height: 14px;
+    cursor: pointer;
+    font-family: "MS ゴシック", monospace;
+    padding: 0;
+    line-height: 12px;
+    text-align: center;
+  }
+  .menu-bar {
+    background: #c0c0c0;
+    padding: 2px 4px;
+    font-size: 11px;
+    border-bottom: 1px solid #808080;
+  }
+  .content {
+    padding: 8px;
+    background: #c0c0c0;
+  }
+  .inset-box {
+    background: white;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    line-height: 1.8;
+    min-height: 80px;
+    color: #000;
+  }
+  .status-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  .status-panel {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 4px 8px;
+    font-size: 11px;
+    flex: 1;
+    color: #000080;
+    font-weight: bold;
+  }
+  .status-panel span {
+    color: #800000;
+  }
+  .btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+  .btn {
+    background: #c0c0c0;
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    padding: 4px 16px;
+    font-size: 12px;
+    font-family: "MS ゴシック", monospace;
+    color: #000080;
+    cursor: pointer;
+    min-width: 80px;
+    text-align: center;
+    font-weight: bold;
+  }
+  .btn:active {
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 5px 15px 3px 17px;
+  }
+  .btn:disabled {
+    color: #808080;
+    cursor: default;
+  }
+  .btn-danger {
+    color: #800000;
+  }
+  .divider {
+    border: none;
+    border-top: 1px solid #808080;
+    border-bottom: 1px solid #ffffff;
+    margin: 6px 0;
+  }
+  .input-field {
+    background: white;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 3px 6px;
+    font-size: 13px;
+    font-family: "MS ゴシック", monospace;
+    color: #000;
+    width: 200px;
+  }
+  select.input-field {
+    width: 120px;
+  }
+  .log-area {
+    background: #000010;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    padding: 6px;
+    height: 140px;
+    overflow-y: scroll;
+    font-size: 11px;
+    color: #00ff00;
+    font-family: "MS ゴシック", monospace;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+  .hp-bar-wrap {
+    display: inline-block;
+    background: #808080;
+    border: 1px solid #000;
+    width: 80px;
+    height: 10px;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+  .hp-bar {
+    background: #00cc00;
+    height: 100%;
+    transition: width 0.3s;
+  }
+  .hp-bar.low { background: #ffcc00; }
+  .hp-bar.critical { background: #cc0000; }
+  .section-label {
+    font-size: 11px;
+    color: #000080;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .enemy-sprite {
+    font-size: 48px;
+    text-align: center;
+    padding: 8px;
+    border: 2px inset #808080;
+    background: #000020;
+    color: #fff;
+    letter-spacing: 2px;
+  }
+  .class-select-box {
+    display: inline-block;
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    background: white;
+    padding: 8px;
+    margin: 4px;
+    cursor: pointer;
+    min-width: 100px;
+    text-align: center;
+    font-size: 11px;
+    color: #000080;
+  }
+  .class-select-box:hover, .class-select-box.selected {
+    background: #000080;
+    color: white;
+  }
+  .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .rainbow {
+    background: linear-gradient(to right, #ff0000, #ff8800, #ffff00, #00cc00, #0000ff, #8800ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+    font-size: 18px;
+  }
+  .shop-item-row {
+    display: flex;
+    align-items: center;
+    padding: 3px;
+    border-bottom: 1px dotted #808080;
+    font-size: 11px;
+  }
+  .shop-item-row:hover { background: #d0d0ff; }
+  #screen-battle .inset-box { min-height: 60px; }
+  .statusbar {
+    background: #c0c0c0;
+    border-top: 1px solid #ffffff;
+    border-left: 1px solid #ffffff;
+    padding: 2px 6px;
+    font-size: 10px;
+    color: #000;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="window" id="main-window">
+  <div class="title-bar">
+    <span>★ 勇者の試練 ～CGI冒険記～ Ver 1.00</span>
+    <div>
+      <button class="title-btn">_</button>
+      <button class="title-btn">□</button>
+      <button class="title-btn" onclick="if(confirm('ゲームを終了しますか？'))window.close()">×</button>
+    </div>
+  </div>
+  <div class="menu-bar">
+    ファイル(F)　ゲーム(G)　ヘルプ(H)
+  </div>
+  <div class="content">
+
+    <!-- ===== タイトル画面 ===== -->
+    <div id="screen-title">
+      <div style="text-align:center; padding: 16px 0 8px;">
+        <div style="font-size:22px; font-weight:bold; color:#000080; letter-spacing:4px;">
+          ★ 勇 者 の 試 練 ★
+        </div>
+        <div style="font-size:11px; color:#808080; margin-top:4px;">
+          ～ CGI冒険記 ～ 1999年製作
+        </div>
+        <hr class="divider">
+        <div style="font-size:20px; margin: 12px 0;">⚔️ 🛡️ 🗡️</div>
+        <div style="font-size:11px; color:#000080; margin-bottom: 12px; line-height:1.8;">
+          はるか遠い王国で魔王が復活した。<br>
+          伝説の勇者よ、今こそ立ち上がる時だ！<br>
+          ダンジョンの深淵へと踏み込み、<br>
+          魔王を倒して平和を取り戻せ！
+        </div>
+        <button class="btn" onclick="showScreen('screen-create')" style="font-size:14px; padding: 8px 32px;">
+          ▶ は じ め る
+        </button>
+        &nbsp;
+        <button class="btn" onclick="loadGame()" style="font-size:14px; padding: 8px 32px;">
+          ▶ つ づ き か ら
+        </button>
+        <div style="margin-top: 12px; font-size: 10px; color:#808080;">
+          ※ このゲームはブラウザ上で動作するCGI風テキストRPGです<br>
+          推奨環境：Internet Explorer 6.0 以上
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== キャラ作成 ===== -->
+    <div id="screen-create" style="display:none">
+      <div class="section-label">【 キャラクター作成 】</div>
+      <div class="inset-box">
+        <table width="100%">
+          <tr>
+            <td style="width:80px; font-weight:bold;">名　前：</td>
+            <td><input type="text" id="input-name" class="input-field" value="ユウシャ" maxlength="8"></td>
+          </tr>
+          <tr>
+            <td style="font-weight:bold; padding-top:8px;">職　業：</td>
+            <td style="padding-top:8px;">
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <div class="class-select-box selected" id="cls-warrior" onclick="selectClass('warrior')">
+                  ⚔️ 戦士<br><span style="font-size:10px; color:#808080;">HP高め<br>物理攻撃得意</span>
+                </div>
+                <div class="class-select-box" id="cls-mage" onclick="selectClass('mage')">
+                  🔮 魔法使い<br><span style="font-size:10px; color:#808080;">MP高め<br>魔法攻撃得意</span>
+                </div>
+                <div class="class-select-box" id="cls-thief" onclick="selectClass('thief')">
+                  🗡️ 盗賊<br><span style="font-size:10px; color:#808080;">素早さ高め<br>先制攻撃得意</span>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="createCharacter()">▶ 冒険開始！</button>
+        <button class="btn" onclick="showScreen('screen-title')">◀ 戻る</button>
+      </div>
+    </div>
+
+    <!-- ===== 街 ===== -->
+    <div id="screen-town" style="display:none">
+      <div class="section-label" id="town-name-label">【 王都アルカディア 】</div>
+      <div class="inset-box" id="town-message">
+        ようこそ、旅人よ。ここは王都アルカディアだ。<br>
+        今日もダンジョンには多くの冒険者が挑んでいる。<br>
+        装備を整え、いざ出発だ！
+      </div>
+      <div class="status-bar">
+        <div class="status-panel">
+          💖 HP <span id="town-hp">30</span>/<span id="town-maxhp">30</span>
+        </div>
+        <div class="status-panel">
+          💫 MP <span id="town-mp">10</span>/<span id="town-maxmp">10</span>
+        </div>
+        <div class="status-panel">
+          💰 G <span id="town-gold">100</span>
+        </div>
+        <div class="status-panel">
+          🏆 Lv <span id="town-lv">1</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="showScreen('screen-dungeon'); enterDungeon()">🗺 ダンジョンへ</button>
+        <button class="btn" onclick="showScreen('screen-shop')">🏪 道具屋</button>
+        <button class="btn" onclick="showScreen('screen-inn')">🏨 宿屋</button>
+        <button class="btn" onclick="showScreen('screen-status')">📋 ステータス</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="saveGame()">💾 セーブ</button>
+      </div>
+    </div>
+
+    <!-- ===== ダンジョン ===== -->
+    <div id="screen-dungeon" style="display:none">
+      <div class="section-label" id="dungeon-label">【 ダンジョン B1F 】</div>
+      <div class="inset-box" id="dungeon-message">
+        ダンジョンの入口に立った。<br>
+        暗闇の中から何かの気配がする…
+      </div>
+      <div class="status-bar">
+        <div class="status-panel">
+          💖 HP <span id="d-hp">30</span>/<span id="d-maxhp">30</span>
+          <div class="hp-bar-wrap"><div class="hp-bar" id="d-hpbar" style="width:100%"></div></div>
+        </div>
+        <div class="status-panel">
+          💫 MP <span id="d-mp">10</span>/<span id="d-maxmp">10</span>
+        </div>
+        <div class="status-panel">🌊 B<span id="d-floor">1</span>F</div>
+      </div>
+      <div class="btn-row" id="dungeon-btn-row">
+        <button class="btn" onclick="dungeonAction('explore')">🔦 探索する</button>
+        <button class="btn" onclick="dungeonAction('stairs')">⬇ 階段を探す</button>
+        <button class="btn" onclick="showScreen('screen-town'); setMsg('town-message','無事に街に戻ってきた。')">🏠 街に戻る</button>
+      </div>
+    </div>
+
+    <!-- ===== バトル ===== -->
+    <div id="screen-battle" style="display:none">
+      <div class="section-label" id="battle-floor-label">【 ダンジョン B1F ～ 戦闘 ～ 】</div>
+      <div style="display:flex; gap:8px; margin-bottom:6px;">
+        <div style="flex:1">
+          <div class="enemy-sprite" id="enemy-sprite">👾</div>
+          <div class="section-label" style="text-align:center; margin-top:4px;" id="enemy-name">スライム</div>
+          <div style="text-align:center; font-size:11px;">
+            HP: <span id="enemy-hp">10</span>/<span id="enemy-maxhp">10</span>
+            <div class="hp-bar-wrap" style="width:60px"><div class="hp-bar" id="enemy-hpbar" style="width:100%"></div></div>
+          </div>
+        </div>
+        <div style="flex:1">
+          <div class="section-label">あなた</div>
+          <div style="font-size:11px; line-height:2;">
+            💖 <span id="b-hp">30</span>/<span id="b-maxhp">30</span>
+            <div class="hp-bar-wrap"><div class="hp-bar" id="b-hpbar" style="width:100%"></div></div><br>
+            💫 <span id="b-mp">10</span>/<span id="b-maxmp">10</span>
+          </div>
+        </div>
+      </div>
+      <div class="log-area" id="battle-log"></div>
+      <div class="btn-row" id="battle-btns">
+        <button class="btn" id="btn-attack" onclick="battleAction('attack')">⚔️ 攻撃</button>
+        <button class="btn" id="btn-magic"  onclick="battleAction('magic')">🔮 魔法</button>
+        <button class="btn" id="btn-item"   onclick="battleAction('item')">🧪 アイテム</button>
+        <button class="btn btn-danger" id="btn-flee" onclick="battleAction('flee')">💨 逃げる</button>
+      </div>
+    </div>
+
+    <!-- ===== 宿屋 ===== -->
+    <div id="screen-inn" style="display:none">
+      <div class="section-label">【 アルカディア宿屋 ～ 月光亭 ～ 】</div>
+      <div class="inset-box">
+        「いらっしゃい！ゆっくりしていってね。」<br><br>
+        宿泊料金：<strong>20G</strong>（HP/MP全回復）<br><br>
+        所持金：<span id="inn-gold">0</span> G
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="stayInn()">🛏 宿泊する (20G)</button>
+        <button class="btn" onclick="showScreen('screen-town')">◀ 戻る</button>
+      </div>
+      <div id="inn-msg" class="inset-box" style="display:none; min-height:30px;"></div>
+    </div>
+
+    <!-- ===== 道具屋 ===== -->
+    <div id="screen-shop" style="display:none">
+      <div class="section-label">【 アルカディア道具屋 ～ 鉄の盾亭 ～ 】</div>
+      <div class="inset-box" style="padding:0; min-height: auto;">
+        <div style="padding: 6px 8px; background:#000080; color:white; font-size:11px;">
+          所持金：<span id="shop-gold">0</span> G　装備：<span id="shop-weapon">素手</span> / <span id="shop-armor">布の服</span>
+        </div>
+        <div id="shop-items"></div>
+      </div>
+      <div id="shop-msg" style="font-size:11px; color:#800000; padding: 4px; min-height:16px;"></div>
+      <div class="btn-row">
+        <button class="btn" onclick="showScreen('screen-town')">◀ 戻る</button>
+      </div>
+    </div>
+
+    <!-- ===== ステータス ===== -->
+    <div id="screen-status" style="display:none">
+      <div class="section-label">【 ステータス画面 】</div>
+      <div class="inset-box">
+        <table width="100%" style="font-size:12px; line-height:2;">
+          <tr><td>名　前</td><td id="st-name">-</td><td>職　業</td><td id="st-class">-</td></tr>
+          <tr><td>レベル</td><td id="st-lv">-</td><td>経験値</td><td id="st-exp">-</td></tr>
+          <tr><td colspan="4"><hr class="divider"></td></tr>
+          <tr><td>HP</td><td id="st-hp">-</td><td>MP</td><td id="st-mp">-</td></tr>
+          <tr><td>攻撃力</td><td id="st-atk">-</td><td>防御力</td><td id="st-def">-</td></tr>
+          <tr><td>素早さ</td><td id="st-spd">-</td><td>魔力</td><td id="st-mag">-</td></tr>
+          <tr><td colspan="4"><hr class="divider"></td></tr>
+          <tr><td>武　器</td><td id="st-weapon">-</td><td>防　具</td><td id="st-armor">-</td></tr>
+          <tr><td colspan="4"><hr class="divider"></td></tr>
+          <tr><td>所持金</td><td id="st-gold">-</td><td>踏破最深</td><td id="st-depth">-</td></tr>
+        </table>
+      </div>
+      <div class="section-label">【 アイテム一覧 】</div>
+      <div class="inset-box" id="st-items" style="font-size:11px; min-height:40px;"></div>
+      <div class="btn-row">
+        <button class="btn" onclick="showScreen('screen-town')">◀ 戻る</button>
+      </div>
+    </div>
+
+    <!-- ===== ゲームオーバー ===== -->
+    <div id="screen-gameover" style="display:none">
+      <div style="text-align:center; padding: 24px 0;">
+        <div style="font-size:28px; color:#800000; font-weight:bold; letter-spacing:4px;">
+          ☠ GAME OVER ☠
+        </div>
+        <div style="font-size:12px; color:#000080; margin: 12px 0 20px; line-height:1.8;">
+          <span id="go-message">力尽きた…</span><br>
+          しかし、冒険は終わらない。
+        </div>
+        <button class="btn" onclick="continueAfterDeath()">▶ 街に戻る</button>
+      </div>
+    </div>
+
+    <!-- ===== クリア ===== -->
+    <div id="screen-clear" style="display:none">
+      <div style="text-align:center; padding: 20px 0;">
+        <div class="rainbow">★ CONGRATULATIONS ★</div>
+        <div style="font-size:14px; font-weight:bold; color:#000080; margin: 12px 0; letter-spacing:2px;">
+          魔王を討伐した！<br>世界に平和が戻った！
+        </div>
+        <div style="font-size:12px; color:#800000; margin-bottom:16px;" id="clear-stats"></div>
+        <button class="btn" onclick="showScreen('screen-title')" style="font-size:14px; padding:8px 32px;">
+          ▶ タイトルへ戻る
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+  <div class="statusbar" id="statusbar">準備完了</div>
+</div><!-- /window -->
+
+<script>
+// ===== ゲームデータ定義 =====
+
+const CLASSES = {
+  warrior: { name:'戦士', emoji:'⚔️', hp:50, mp:8, atk:12, def:8, spd:5, mag:3 },
+  mage:    { name:'魔法使い', emoji:'🔮', hp:30, mp:30, atk:6, def:4, spd:6, mag:14 },
+  thief:   { name:'盗賊', emoji:'🗡️', hp:38, mp:12, atk:10, def:6, spd:12, mag:5 }
+};
+
+const WEAPONS = [
+  { id:'fist',   name:'素手',         atk:0,  price:0 },
+  { id:'dagger', name:'短剣',         atk:4,  price:80 },
+  { id:'sword',  name:'鉄の剣',       atk:9,  price:200 },
+  { id:'great',  name:'グレートソード', atk:18, price:500 },
+  { id:'staff',  name:'魔法の杖',      atk:6,  mag:5, price:300 }
+];
+
+const ARMORS = [
+  { id:'cloth',  name:'布の服',   def:0, price:0 },
+  { id:'leather',name:'革の鎧',   def:4, price:100 },
+  { id:'chain',  name:'鎖かたびら', def:8, price:280 },
+  { id:'plate',  name:'鋼の鎧',   def:14, price:600 }
+];
+
+const ITEMS = [
+  { id:'potion',  name:'薬草',         price:30,  effect:'hp30',   desc:'HP30回復' },
+  { id:'hipotion',name:'上薬草',       price:80,  effect:'hp80',   desc:'HP80回復' },
+  { id:'ether',   name:'魔力の水',     price:50,  effect:'mp10',   desc:'MP10回復' },
+  { id:'elixir',  name:'エリクサー',   price:500, effect:'full',   desc:'HP/MP全回復' },
+  { id:'antidote',name:'どくけし草',   price:20,  effect:'cure',   desc:'毒を治す' }
+];
+
+const ENEMIES = [
+  // B1F
+  { name:'スライム',   emoji:'🟢', hp:12, atk:5,  def:2,  spd:4,  exp:8,  gold:6,  floor:1 },
+  { name:'コウモリ',   emoji:'🦇', hp:10, atk:7,  def:1,  spd:9,  exp:7,  gold:5,  floor:1 },
+  { name:'ゴブリン',   emoji:'👺', hp:18, atk:8,  def:3,  spd:6,  exp:12, gold:10, floor:1 },
+  // B2F
+  { name:'オーク',     emoji:'🐗', hp:30, atk:12, def:5,  spd:5,  exp:20, gold:15, floor:2 },
+  { name:'スケルトン', emoji:'💀', hp:25, atk:10, def:7,  spd:4,  exp:18, gold:12, floor:2 },
+  { name:'ウィザード', emoji:'🧙', hp:22, atk:14, def:3,  spd:8,  exp:25, gold:20, floor:2, magic:true },
+  // B3F
+  { name:'トロール',   emoji:'🧌', hp:50, atk:18, def:8,  spd:4,  exp:40, gold:30, floor:3 },
+  { name:'ドラゴン子', emoji:'🐲', hp:45, atk:20, def:10, spd:6,  exp:50, gold:40, floor:3 },
+  { name:'デーモン',   emoji:'😈', hp:55, atk:22, def:9,  spd:7,  exp:55, gold:35, floor:3 },
+  // B4F
+  { name:'ヴァンパイア',emoji:'🧛', hp:70, atk:25, def:12, spd:10, exp:80, gold:60, floor:4, drain:true },
+  { name:'バジリスク', emoji:'🐍', hp:80, atk:22, def:15, spd:5,  exp:90, gold:55, floor:4 },
+  // B5F ボス
+  { name:'魔王ダークロード', emoji:'👿', hp:200, atk:35, def:18, spd:8,  exp:500, gold:300, floor:5, boss:true, magic:true }
+];
+
+const EXP_TABLE = [0, 30, 80, 150, 250, 400, 600, 900, 1300, 1800, 2500];
+
+// ===== ゲーム状態 =====
+let G = null; // game state
+let battle = null;
+let dungeonFloor = 1;
+let selectedClass = 'warrior';
+
+function newGame(name, cls) {
+  const c = CLASSES[cls];
+  return {
+    name, cls,
+    lv: 1, exp: 0,
+    maxHp: c.hp, hp: c.hp,
+    maxMp: c.mp, mp: c.mp,
+    baseAtk: c.atk, baseDef: c.def, baseSpd: c.spd, baseMag: c.mag,
+    weapon: 'fist', armor: 'cloth',
+    items: [{ id:'potion', qty:3 }],
+    gold: 100,
+    maxFloor: 1,
+    poisoned: false
+  };
+}
+
+function getWeapon(id) { return WEAPONS.find(w => w.id === id) || WEAPONS[0]; }
+function getArmor(id)  { return ARMORS.find(a => a.id === id) || ARMORS[0]; }
+function getItem(id)   { return ITEMS.find(i => i.id === id); }
+
+function totalAtk() { return G.baseAtk + (getWeapon(G.weapon).atk || 0); }
+function totalDef() { return G.baseDef + (getArmor(G.armor).def || 0); }
+function totalMag() { return G.baseMag + (getWeapon(G.weapon).mag || 0); }
+
+// ===== 画面切替 =====
+function showScreen(id) {
+  document.querySelectorAll('[id^="screen-"]').forEach(el => el.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+  if (id === 'screen-town')     updateTownUI();
+  if (id === 'screen-status')   updateStatusUI();
+  if (id === 'screen-shop')     updateShopUI();
+  if (id === 'screen-inn')      updateInnUI();
+}
+
+function setMsg(id, html) {
+  document.getElementById(id).innerHTML = html;
+}
+function setStatus(msg) {
+  document.getElementById('statusbar').textContent = msg;
+}
+
+// ===== キャラ作成 =====
+function selectClass(cls) {
+  selectedClass = cls;
+  document.querySelectorAll('.class-select-box').forEach(el => el.classList.remove('selected'));
+  document.getElementById('cls-' + cls).classList.add('selected');
+}
+
+function createCharacter() {
+  const name = document.getElementById('input-name').value.trim() || 'ユウシャ';
+  G = newGame(name, selectedClass);
+  dungeonFloor = 1;
+  showScreen('screen-town');
+  setMsg('town-message', `ようこそ、${name}よ！<br>冒険の旅が始まった。まずは装備を整えよう！`);
+  setStatus('新しい冒険が始まった！');
+}
+
+// ===== 街UI =====
+function updateTownUI() {
+  if (!G) return;
+  document.getElementById('town-hp').textContent    = G.hp;
+  document.getElementById('town-maxhp').textContent = G.maxHp;
+  document.getElementById('town-mp').textContent    = G.mp;
+  document.getElementById('town-maxmp').textContent = G.maxMp;
+  document.getElementById('town-gold').textContent  = G.gold;
+  document.getElementById('town-lv').textContent    = G.lv;
+}
+
+// ===== ダンジョン =====
+function enterDungeon() {
+  dungeonFloor = 1;
+  updateDungeonUI();
+  setMsg('dungeon-message', 'ダンジョンの入口に立った。<br>松明の炎が揺れている…');
+}
+
+function updateDungeonUI() {
+  document.getElementById('dungeon-label').textContent = `【 ダンジョン B${dungeonFloor}F 】`;
+  document.getElementById('d-hp').textContent    = G.hp;
+  document.getElementById('d-maxhp').textContent = G.maxHp;
+  document.getElementById('d-mp').textContent    = G.mp;
+  document.getElementById('d-maxmp').textContent = G.maxMp;
+  document.getElementById('d-floor').textContent = dungeonFloor;
+  updateHPBar('d-hpbar', G.hp, G.maxHp);
+}
+
+function dungeonAction(action) {
+  if (action === 'explore') {
+    // 探索：60%で敵、20%でアイテム、20%で何もなし
+    const r = Math.random();
+    if (r < 0.60) {
+      startBattle();
+    } else if (r < 0.80) {
+      // アイテム発見
+      const found = ITEMS[Math.floor(Math.random() * 3)];
+      addItem(found.id);
+      setMsg('dungeon-message', `✨ ${found.name}を発見した！\nアイテムに追加した。`);
+      updateDungeonUI();
+    } else {
+      const msgs = [
+        'しばらく歩いたが何も起きなかった…',
+        '壁に不思議な文字が刻まれていた。',
+        'どこからか水のしたたる音が聞こえる。',
+        'ここは安全なようだ。息を整えた。'
+      ];
+      setMsg('dungeon-message', msgs[Math.floor(Math.random() * msgs.length)]);
+    }
+  } else if (action === 'stairs') {
+    if (dungeonFloor >= 5) {
+      // 魔王の間
+      setMsg('dungeon-message', '巨大な扉の前に立った。<br>扉の向こうから禍々しい気配が…<br><span style="color:#800000">魔王ダークロードが待ち受けている！</span>');
+      setTimeout(() => startBossBattle(), 800);
+    } else {
+      const r = Math.random();
+      if (r < 0.4) {
+        dungeonFloor++;
+        if (dungeonFloor > G.maxFloor) G.maxFloor = dungeonFloor;
+        updateDungeonUI();
+        setMsg('dungeon-message', `階段を見つけた！<br>B${dungeonFloor}Fへ降りた。<br>さらに強い魔物がいるようだ…`);
+      } else {
+        setMsg('dungeon-message', 'まだ階段は見つからない…<br>もっと探索が必要だ。');
+      }
+    }
+  }
+  if (G.poisoned) {
+    G.hp = Math.max(1, G.hp - 3);
+    updateDungeonUI();
+  }
+}
+
+// ===== バトル =====
+const floorEnemies = (floor) => ENEMIES.filter(e => e.floor === floor && !e.boss);
+
+function startBattle() {
+  const pool = floorEnemies(dungeonFloor);
+  const template = pool[Math.floor(Math.random() * pool.length)];
+  startBattleWith(template);
+}
+
+function startBossBattle() {
+  const boss = ENEMIES.find(e => e.boss);
+  startBattleWith(boss);
+}
+
+function startBattleWith(template) {
+  battle = {
+    enemy: { ...template },
+    playerTurn: true,
+    fled: false
+  };
+  // 盗賊は先制
+  if (G.cls === 'thief' && G.baseSpd > battle.enemy.spd) {
+    battle.playerFirst = true;
+  }
+  showScreen('screen-battle');
+  updateBattleUI();
+  document.getElementById('battle-floor-label').textContent = `【 ダンジョン B${dungeonFloor}F ～ 戦闘 ～ 】`;
+  const log = document.getElementById('battle-log');
+  log.innerHTML = '';
+  addLog(`<span style="color:#ffff00">⚠ ${battle.enemy.name}が現れた！</span>`);
+  if (battle.playerFirst) addLog('<span style="color:#00ffff">素早い！先制攻撃！</span>');
+  setBattleButtons(true);
+}
+
+function updateBattleUI() {
+  if (!battle) return;
+  const e = battle.enemy;
+  document.getElementById('enemy-sprite').textContent = e.emoji;
+  document.getElementById('enemy-name').textContent   = e.name;
+  document.getElementById('enemy-hp').textContent     = e.hp;
+  document.getElementById('enemy-maxhp').textContent  = e.hp > 0 ? template_maxhp(e) : e.hp;
+  document.getElementById('b-hp').textContent    = G.hp;
+  document.getElementById('b-maxhp').textContent = G.maxHp;
+  document.getElementById('b-mp').textContent    = G.mp;
+  document.getElementById('b-maxmp').textContent = G.maxMp;
+  updateHPBar('b-hpbar', G.hp, G.maxHp);
+}
+
+// 最大HPを保持するためのヘルパー
+let _enemyMaxHp = 0;
+function template_maxhp(e) { return _enemyMaxHp || e.hp; }
+
+function startBattleWith_real(template) {
+  _enemyMaxHp = template.hp;
+  battle = {
+    enemy: { ...template, maxHp: template.hp },
+    playerFirst: false
+  };
+  if (G.cls === 'thief' && G.baseSpd > battle.enemy.spd) {
+    battle.playerFirst = true;
+  }
+  showScreen('screen-battle');
+  document.getElementById('battle-floor-label').textContent = `【 ダンジョン B${dungeonFloor}F ～ 戦闘 ～ 】`;
+  const log = document.getElementById('battle-log');
+  log.innerHTML = '';
+  document.getElementById('enemy-sprite').textContent = battle.enemy.emoji;
+  document.getElementById('enemy-name').textContent   = battle.enemy.name;
+  document.getElementById('enemy-hp').textContent     = battle.enemy.hp;
+  document.getElementById('enemy-maxhp').textContent  = battle.enemy.maxHp;
+  document.getElementById('b-hp').textContent    = G.hp;
+  document.getElementById('b-maxhp').textContent = G.maxHp;
+  document.getElementById('b-mp').textContent    = G.mp;
+  document.getElementById('b-maxmp').textContent = G.maxMp;
+  updateHPBar('b-hpbar', G.hp, G.maxHp);
+  updateHPBar('enemy-hpbar', battle.enemy.hp, battle.enemy.maxHp);
+  addLog(`<span style="color:#ffff00">⚠ ${battle.enemy.name}が現れた！</span>`);
+  if (battle.playerFirst) {
+    addLog('<span style="color:#00ffff">素早い！先制攻撃の機会を得た！</span>');
+  }
+  setBattleButtons(true);
+}
+
+// 上書き
+startBattle = function() {
+  const pool = floorEnemies(dungeonFloor);
+  const template = pool[Math.floor(Math.random() * pool.length)];
+  startBattleWith_real(template);
+};
+startBossBattle = function() {
+  const boss = ENEMIES.find(e => e.boss);
+  startBattleWith_real(boss);
+};
+
+function addLog(html) {
+  const log = document.getElementById('battle-log');
+  log.innerHTML += html + '<br>';
+  log.scrollTop = log.scrollHeight;
+}
+
+function setBattleButtons(enabled) {
+  ['btn-attack','btn-magic','btn-item','btn-flee'].forEach(id => {
+    document.getElementById(id).disabled = !enabled;
+  });
+  // MPチェック
+  const magicCost = G.cls === 'mage' ? 5 : 8;
+  document.getElementById('btn-magic').disabled = !enabled || G.mp < magicCost;
+  // アイテムチェック
+  const hasUsable = G.items.some(i => i.qty > 0 && getItem(i.id)?.effect.startsWith('hp'));
+  document.getElementById('btn-item').disabled = !enabled || !hasUsable;
+}
+
+function battleAction(action) {
+  if (!battle) return;
+  setBattleButtons(false);
+
+  let playerDmg = 0;
+  let logMsg = '';
+
+  if (action === 'attack') {
+    playerDmg = calcDamage(totalAtk(), battle.enemy.def);
+    battle.enemy.hp = Math.max(0, battle.enemy.hp - playerDmg);
+    addLog(`⚔ <span style="color:#ffcc00">${G.name}の攻撃！</span> ${battle.enemy.name}に<span style="color:#ff4444">${playerDmg}ダメージ！</span>`);
+  } else if (action === 'magic') {
+    const cost = G.cls === 'mage' ? 5 : 8;
+    const magDmg = Math.floor(totalMag() * 2.5);
+    playerDmg = calcDamage(magDmg, Math.floor(battle.enemy.def / 2));
+    G.mp -= cost;
+    battle.enemy.hp = Math.max(0, battle.enemy.hp - playerDmg);
+    const spellName = G.cls === 'mage' ? 'ファイア' : 'サンダー';
+    addLog(`🔮 <span style="color:#cc88ff">${spellName}！</span> ${battle.enemy.name}に<span style="color:#ff44ff">${playerDmg}魔法ダメージ！</span>`);
+    document.getElementById('b-mp').textContent = G.mp;
+  } else if (action === 'item') {
+    const slot = G.items.find(i => i.qty > 0 && getItem(i.id)?.effect.startsWith('hp'));
+    if (slot) {
+      const itm = getItem(slot.id);
+      slot.qty--;
+      const heal = itm.effect === 'hp30' ? 30 : 80;
+      G.hp = Math.min(G.maxHp, G.hp + heal);
+      addLog(`🧪 <span style="color:#00ff88">${itm.name}を使った！ HP${heal}回復！</span>`);
+      updateBattleHP();
+    }
+  } else if (action === 'flee') {
+    const chance = G.cls === 'thief' ? 0.75 : 0.5;
+    if (Math.random() < chance) {
+      addLog('<span style="color:#88ffff">うまく逃げ出した！</span>');
+      setBattleButtons(false);
+      setTimeout(() => {
+        showScreen('screen-dungeon');
+        updateDungeonUI();
+        setMsg('dungeon-message', '間一髪で逃げ出した！\nまだドキドキしている…');
+      }, 900);
+      return;
+    } else {
+      addLog('<span style="color:#ff8888">逃げられなかった！</span>');
+    }
+  }
+
+  // 敵が倒れたか
+  if (battle.enemy.hp <= 0) {
+    updateBattleHP();
+    updateEnemyHPBar();
+    addLog(`<span style="color:#ffff00">✨ ${battle.enemy.name}を倒した！</span>`);
+    addLog(`経験値 <span style="color:#88ff88">+${battle.enemy.exp}</span>、ゴールド <span style="color:#ffcc00">+${battle.enemy.gold}G</span>`);
+    G.gold += battle.enemy.gold;
+    const lvUp = addExp(battle.enemy.exp);
+    if (lvUp) addLog(`<span style="color:#ffff00 font-weight:bold">★ LEVEL UP! Lv${G.lv}になった！</span>`);
+    if (battle.enemy.boss) {
+      setTimeout(() => showClear(), 1200);
+    } else {
+      setBattleButtons(false);
+      setTimeout(() => {
+        showScreen('screen-dungeon');
+        updateDungeonUI();
+        setMsg('dungeon-message', `${battle.enemy.name}を倒した！\n戦いの後、静寂が戻った。`);
+      }, 1000);
+    }
+    return;
+  }
+
+  updateEnemyHPBar();
+  updateBattleHP();
+
+  // 敵のターン（少し遅延）
+  setTimeout(() => enemyTurn(), 600);
+}
+
+function enemyTurn() {
+  const e = battle.enemy;
+  let eDmg = 0;
+
+  if (e.magic && Math.random() < 0.35) {
+    eDmg = calcDamage(Math.floor(e.atk * 1.5), Math.floor(totalDef() / 2));
+    addLog(`🔮 <span style="color:#ff88ff">${e.name}の魔法攻撃！</span> <span style="color:#ff4444">${eDmg}ダメージ！</span>`);
+  } else if (e.drain && Math.random() < 0.3) {
+    eDmg = calcDamage(e.atk, totalDef());
+    const drain = Math.floor(eDmg / 2);
+    e.hp = Math.min(e.maxHp, e.hp + drain);
+    addLog(`💜 <span style="color:#cc44cc">${e.name}が吸血した！</span> ${eDmg}ダメージ＋HP${drain}吸収！`);
+    updateEnemyHPBar();
+  } else {
+    eDmg = calcDamage(e.atk, totalDef());
+    addLog(`💥 <span style="color:#ff8888">${e.name}の攻撃！</span> ${G.name}に<span style="color:#ff4444">${eDmg}ダメージ！</span>`);
+  }
+
+  G.hp = Math.max(0, G.hp - eDmg);
+  updateBattleHP();
+
+  if (G.hp <= 0) {
+    addLog(`<span style="color:#ff0000">☠ ${G.name}は倒れた…</span>`);
+    setBattleButtons(false);
+    setTimeout(() => {
+      document.getElementById('go-message').textContent = `${e.name}に倒された…`;
+      showScreen('screen-gameover');
+    }, 1000);
+    return;
+  }
+
+  setBattleButtons(true);
+}
+
+function calcDamage(atk, def) {
+  const base = Math.max(1, atk - def);
+  return base + Math.floor(Math.random() * Math.floor(base * 0.3 + 1));
+}
+
+function updateBattleHP() {
+  document.getElementById('b-hp').textContent    = G.hp;
+  document.getElementById('b-maxhp').textContent = G.maxHp;
+  document.getElementById('b-mp').textContent    = G.mp;
+  updateHPBar('b-hpbar', G.hp, G.maxHp);
+}
+
+function updateEnemyHPBar() {
+  if (!battle) return;
+  document.getElementById('enemy-hp').textContent = battle.enemy.hp;
+  updateHPBar('enemy-hpbar', battle.enemy.hp, battle.enemy.maxHp);
+}
+
+function updateHPBar(id, hp, maxHp) {
+  const bar = document.getElementById(id);
+  if (!bar) return;
+  const pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
+  bar.style.width = pct + '%';
+  bar.className = 'hp-bar';
+  if (pct < 25) bar.classList.add('critical');
+  else if (pct < 50) bar.classList.add('low');
+}
+
+// ===== 経験値・レベルアップ =====
+function addExp(exp) {
+  G.exp += exp;
+  if (G.lv >= 10) return false;
+  if (G.exp >= EXP_TABLE[G.lv]) {
+    G.lv++;
+    const c = CLASSES[G.cls];
+    const hpGain = Math.floor(c.hp * 0.12) + Math.floor(Math.random() * 4);
+    const mpGain = Math.floor(c.mp * 0.12) + Math.floor(Math.random() * 2);
+    G.maxHp += hpGain;
+    G.hp = G.maxHp;
+    G.maxMp += mpGain;
+    G.mp = G.maxMp;
+    G.baseAtk += Math.floor(c.atk * 0.08) + 1;
+    G.baseDef += Math.floor(c.def * 0.08) + 1;
+    G.baseSpd += 1;
+    G.baseMag += Math.floor(c.mag * 0.08) + 1;
+    return true;
+  }
+  return false;
+}
+
+// ===== アイテム管理 =====
+function addItem(id) {
+  const slot = G.items.find(i => i.id === id);
+  if (slot) slot.qty++;
+  else G.items.push({ id, qty: 1 });
+}
+
+// ===== 宿屋 =====
+function updateInnUI() {
+  document.getElementById('inn-gold').textContent = G.gold;
+  document.getElementById('inn-msg').style.display = 'none';
+}
+
+function stayInn() {
+  if (G.gold < 20) {
+    document.getElementById('inn-msg').style.display = 'block';
+    document.getElementById('inn-msg').innerHTML = '「お金が足りないよ！」';
+    return;
+  }
+  G.gold -= 20;
+  G.hp = G.maxHp;
+  G.mp = G.maxMp;
+  G.poisoned = false;
+  document.getElementById('inn-gold').textContent = G.gold;
+  document.getElementById('inn-msg').style.display = 'block';
+  document.getElementById('inn-msg').innerHTML = '「ゆっくり休めたね。また来てね！」<br>💖 HP/MP全回復！';
+}
+
+// ===== 道具屋 =====
+function updateShopUI() {
+  document.getElementById('shop-gold').textContent  = G.gold;
+  document.getElementById('shop-weapon').textContent = getWeapon(G.weapon).name;
+  document.getElementById('shop-armor').textContent  = getArmor(G.armor).name;
+
+  const container = document.getElementById('shop-items');
+  container.innerHTML = '';
+
+  const makeRow = (label, arr, type) => {
+    const h = document.createElement('div');
+    h.style.cssText = 'padding:4px 8px; background:#c0c0c0; font-weight:bold; font-size:11px; border-bottom:1px solid #808080;';
+    h.textContent = '── ' + label + ' ──';
+    container.appendChild(h);
+
+    arr.forEach(item => {
+      if (item.price === 0) return;
+      const row = document.createElement('div');
+      row.className = 'shop-item-row';
+      const equipped = (type === 'weapon' && G.weapon === item.id) || (type === 'armor' && G.armor === item.id);
+      row.innerHTML = `
+        <span style="flex:1; color:${equipped ? '#800000' : '#000080'}">${item.name}${equipped ? '【装備中】' : ''}</span>
+        <span style="color:#808080; margin-right:8px">${type==='weapon' ? '攻+'+item.atk : '防+'+item.def}</span>
+        <span style="color:#000080; margin-right:8px">${item.price}G</span>
+        <button class="btn" style="min-width:50px; font-size:10px; padding:2px 6px;" onclick="buyEquip('${type}','${item.id}',${item.price})">購入</button>
+      `;
+      container.appendChild(row);
+    });
+  };
+
+  const makeItemRow = (label, arr) => {
+    const h = document.createElement('div');
+    h.style.cssText = 'padding:4px 8px; background:#c0c0c0; font-weight:bold; font-size:11px; border-bottom:1px solid #808080;';
+    h.textContent = '── ' + label + ' ──';
+    container.appendChild(h);
+
+    arr.forEach(item => {
+      const slot = G.items.find(i => i.id === item.id);
+      const qty = slot ? slot.qty : 0;
+      const row = document.createElement('div');
+      row.className = 'shop-item-row';
+      row.innerHTML = `
+        <span style="flex:1; color:#000080">${item.name}</span>
+        <span style="color:#808080; margin-right:8px">${item.desc}</span>
+        <span style="color:#000080; margin-right:8px">${item.price}G</span>
+        <span style="margin-right:8px; color:#808080">所持:${qty}</span>
+        <button class="btn" style="min-width:50px; font-size:10px; padding:2px 6px;" onclick="buyItem('${item.id}',${item.price})">購入</button>
+      `;
+      container.appendChild(row);
+    });
+  };
+
+  makeRow('武器', WEAPONS, 'weapon');
+  makeRow('防具', ARMORS, 'armor');
+  makeItemRow('アイテム', ITEMS);
+}
+
+function buyEquip(type, id, price) {
+  if (G.gold < price) { shopMsg('お金が足りない！'); return; }
+  G.gold -= price;
+  if (type === 'weapon') G.weapon = id;
+  else G.armor = id;
+  shopMsg(`${type === 'weapon' ? getWeapon(id).name : getArmor(id).name}を購入した！`);
+  updateShopUI();
+}
+
+function buyItem(id, price) {
+  if (G.gold < price) { shopMsg('お金が足りない！'); return; }
+  G.gold -= price;
+  addItem(id);
+  shopMsg(`${getItem(id).name}を購入した！`);
+  updateShopUI();
+}
+
+function shopMsg(msg) {
+  const el = document.getElementById('shop-msg');
+  el.textContent = '>> ' + msg;
+  setTimeout(() => el.textContent = '', 2000);
+}
+
+// ===== ステータス =====
+function updateStatusUI() {
+  if (!G) return;
+  const cls = CLASSES[G.cls];
+  document.getElementById('st-name').textContent   = G.name;
+  document.getElementById('st-class').textContent  = cls.emoji + ' ' + cls.name;
+  document.getElementById('st-lv').textContent     = G.lv;
+  document.getElementById('st-exp').textContent    = G.exp + ' / ' + (EXP_TABLE[G.lv] || '---');
+  document.getElementById('st-hp').textContent     = G.hp + ' / ' + G.maxHp;
+  document.getElementById('st-mp').textContent     = G.mp + ' / ' + G.maxMp;
+  document.getElementById('st-atk').textContent    = totalAtk();
+  document.getElementById('st-def').textContent    = totalDef();
+  document.getElementById('st-spd').textContent    = G.baseSpd;
+  document.getElementById('st-mag').textContent    = totalMag();
+  document.getElementById('st-weapon').textContent = getWeapon(G.weapon).name;
+  document.getElementById('st-armor').textContent  = getArmor(G.armor).name;
+  document.getElementById('st-gold').textContent   = G.gold + ' G';
+  document.getElementById('st-depth').textContent  = 'B' + G.maxFloor + 'F';
+
+  const itemsEl = document.getElementById('st-items');
+  const hasItems = G.items.filter(i => i.qty > 0);
+  if (hasItems.length === 0) {
+    itemsEl.innerHTML = '（なし）';
+  } else {
+    itemsEl.innerHTML = hasItems.map(i => {
+      const def = getItem(i.id);
+      return `${def ? def.name : i.id} ×${i.qty}`;
+    }).join('　');
+  }
+}
+
+// ===== クリア =====
+function showClear() {
+  document.getElementById('clear-stats').innerHTML =
+    `${G.name}（Lv${G.lv}　${CLASSES[G.cls].name}）<br>` +
+    `冒険の終わり。お疲れさまでした！`;
+  showScreen('screen-clear');
+}
+
+// ===== ゲームオーバー後 =====
+function continueAfterDeath() {
+  G.hp = Math.floor(G.maxHp / 2);
+  G.mp = Math.floor(G.maxMp / 2);
+  dungeonFloor = 1;
+  showScreen('screen-town');
+  setMsg('town-message', '気がつくと街の入口に立っていた…<br>守護精霊に助けられたようだ。');
+}
+
+// ===== セーブ/ロード =====
+function saveGame() {
+  localStorage.setItem('retroRPG_save', JSON.stringify({ G, dungeonFloor }));
+  setMsg('town-message', '💾 セーブしました！');
+  setStatus('セーブ完了');
+}
+
+function loadGame() {
+  const raw = localStorage.getItem('retroRPG_save');
+  if (!raw) { alert('セーブデータが見つかりません。'); return; }
+  const data = JSON.parse(raw);
+  G = data.G;
+  dungeonFloor = data.dungeonFloor || 1;
+  showScreen('screen-town');
+  setMsg('town-message', '💾 セーブデータを読み込みました。\nおかえり、' + G.name + '！');
+  setStatus('ロード完了');
+}
+</script>
+</body>
+</html>
