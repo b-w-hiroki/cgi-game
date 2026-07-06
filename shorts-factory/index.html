@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHORTS FACTORY — 縦型ショート・自動生成システム</title>
+<style>
+  :root {
+    --bg: #0a0702;
+    --panel: #140e04;
+    --panel-2: #1a1206;
+    --line: rgba(240, 170, 60, 0.28);
+    --line-strong: rgba(240, 170, 60, 0.55);
+    --amber: #e8a33d;
+    --amber-bright: #ffc456;
+    --amber-dim: #96712f;
+    --amber-faint: #5c4620;
+    --green: #7dd87d;
+    --font: "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--amber);
+    font-family: var(--font);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  /* CRT scanline overlay */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0,0,0,0.16) 0px,
+      rgba(0,0,0,0.16) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    z-index: 999;
+  }
+
+  /* ============ HEADER ============ */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #191106, #100a03);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 3px;
+    color: var(--amber-bright);
+    text-shadow: 0 0 12px rgba(255, 196, 86, 0.35);
+    white-space: nowrap;
+  }
+  .logo::before {
+    content: "";
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--amber-bright);
+    box-shadow: 0 0 10px var(--amber-bright);
+  }
+  .subtitle {
+    color: var(--amber-dim);
+    font-size: 11px;
+    letter-spacing: 2px;
+    border-left: 1px solid var(--line);
+    padding-left: 16px;
+    white-space: nowrap;
+  }
+  nav.steps {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+  .step {
+    padding: 4px 12px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--amber-dim);
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .step.active {
+    color: #100a03;
+    background: var(--amber);
+    font-weight: 700;
+    text-shadow: none;
+  }
+  .step.done { color: var(--amber-bright); }
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    white-space: nowrap;
+  }
+  .badge::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.3; } }
+  #clock {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--amber-bright);
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 196, 86, 0.4);
+    white-space: nowrap;
+  }
+  #clock small { font-size: 10px; color: var(--amber-dim); margin-left: 4px; }
+
+  /* ============ MAIN ============ */
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 14px;
+    padding: 14px 18px;
+    min-height: 0;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .panel-title {
+    padding: 10px 14px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--amber-bright);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .panel-title::before { content: "■"; font-size: 8px; }
+  .panel-title .jp { color: var(--amber-dim); letter-spacing: 1px; }
+
+  /* ---- Left: research ---- */
+  #research { overflow: hidden; }
+  .counter-block { padding: 16px 14px 10px; border-bottom: 1px dashed var(--line); }
+  #buzz-count {
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--amber-bright);
+    text-shadow: 0 0 18px rgba(255, 196, 86, 0.4);
+  }
+  #buzz-count small { font-size: 16px; color: var(--amber-dim); margin-left: 4px; }
+  .counter-label {
+    text-align: right;
+    color: var(--amber-dim);
+    font-size: 11px;
+    margin-top: -14px;
+    line-height: 1.5;
+  }
+  .hooks-block { padding: 12px 14px; border-bottom: 1px dashed var(--line); }
+  .hooks-head {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--amber-dim);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .hook-row {
+    display: grid;
+    grid-template-columns: 62px 1fr 36px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 11px;
+  }
+  .hook-row .bar {
+    height: 7px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .hook-row .bar i {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber-dim), var(--amber-bright));
+    width: 0%;
+    transition: width 1.2s ease;
+  }
+  .hook-row .pct { text-align: right; color: var(--amber-bright); }
+  #feed {
+    flex: 1;
+    overflow: hidden;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 6px;
+    font-size: 11px;
+  }
+  .feed-line { display: flex; gap: 8px; opacity: 0; animation: fadein 0.4s forwards; white-space: nowrap; overflow: hidden; }
+  @keyframes fadein { to { opacity: 1; } }
+  .feed-line .t { color: var(--amber-faint); }
+  .feed-line .src { color: #d24a3e; font-weight: 700; min-width: 58px; }
+  .feed-line .src.yt { color: #d24a3e; }
+  .feed-line .src.tk { color: #4ec3c9; }
+  .feed-line .msg { color: var(--amber); }
+  .feed-line .msg b { color: var(--amber-bright); }
+  .panel-foot {
+    padding: 8px 14px;
+    border-top: 1px solid var(--line);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--amber-faint);
+  }
+
+  /* ---- Right column ---- */
+  .right-col { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .url-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+  }
+  .url-bar label { font-size: 11px; letter-spacing: 2px; color: var(--amber-dim); white-space: nowrap; }
+  #product-url {
+    flex: 1;
+    background: #0c0803;
+    border: 1px solid var(--line-strong);
+    color: var(--amber-bright);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 8px 12px;
+    outline: none;
+  }
+  #product-url:focus { box-shadow: 0 0 12px rgba(240, 170, 60, 0.25); }
+  #product-url::placeholder { color: var(--amber-faint); }
+  #generate-btn {
+    background: var(--amber);
+    color: #100a03;
+    border: none;
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 9px 22px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #generate-btn:hover { background: var(--amber-bright); box-shadow: 0 0 14px rgba(255, 196, 86, 0.45); }
+  #generate-btn:disabled { background: var(--amber-faint); cursor: wait; }
+
+  #generator { flex: 1; }
+  .gen-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 12px 14px;
+    min-height: 0;
+  }
+  .gen-card {
+    border: 1px dashed var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    transition: border-color 0.4s;
+  }
+  .gen-card.filled { border: 1px solid var(--line-strong); background: var(--panel-2); }
+  .gen-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .gen-card.filled .gen-card-head { border-bottom-style: solid; }
+  .gen-card-head .tag {
+    color: var(--amber-faint);
+    font-weight: 700;
+  }
+  .gen-card-head .name { color: var(--amber-bright); letter-spacing: 1px; }
+  .copy-btn {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--amber-dim);
+    font-family: var(--font);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    cursor: pointer;
+    visibility: hidden;
+  }
+  .gen-card.filled .copy-btn { visibility: visible; }
+  .copy-btn:hover { color: var(--amber-bright); border-color: var(--line-strong); }
+  .gen-card-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .gen-card-body::-webkit-scrollbar { width: 4px; }
+  .gen-card-body::-webkit-scrollbar-thumb { background: var(--amber-faint); }
+  .gen-card-body .placeholder {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--amber-faint);
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+  .script-line { opacity: 0; animation: fadein 0.35s forwards; margin-bottom: 7px; }
+  .script-line .tc {
+    color: #100a03;
+    background: var(--amber-dim);
+    font-size: 9px;
+    padding: 1px 5px;
+    margin-right: 7px;
+    font-weight: 700;
+  }
+  .script-line .role { color: var(--amber-bright); font-weight: 700; }
+  .script-line .txt { color: var(--amber); }
+  .script-line.hashtags { color: var(--amber-dim); word-break: break-all; }
+  .script-line.title-line { color: var(--amber-bright); font-weight: 700; border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
+
+  /* ---- schedule ---- */
+  #schedule {
+    display: none;
+    padding: 10px 14px;
+    border-top: 1px solid var(--line);
+    gap: 20px;
+    font-size: 11px;
+    align-items: center;
+  }
+  #schedule.visible { display: flex; }
+  #schedule .sched-title { color: var(--amber-dim); letter-spacing: 2px; font-size: 10px; }
+  .sched-slot { display: flex; gap: 8px; align-items: center; }
+  .sched-slot .k { color: var(--amber-faint); font-weight: 700; }
+  .sched-slot .platform { color: var(--amber-bright); }
+  .sched-slot .time { color: var(--green); }
+
+  /* ============ STATUS BAR ============ */
+  footer {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 18px;
+    border-top: 1px solid var(--line);
+    background: #100a03;
+    font-size: 11px;
+  }
+  footer .cursor { color: var(--amber-bright); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  #status-text { color: var(--amber); letter-spacing: 1px; }
+  footer .version { margin-left: auto; color: var(--amber-faint); letter-spacing: 2px; font-size: 9px; }
+
+  @media (max-width: 900px) {
+    body { overflow: auto; }
+    main { grid-template-columns: 1fr; }
+    .gen-grid { grid-template-columns: 1fr; }
+    nav.steps { display: none; }
+    .subtitle { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">SHORTS FACTORY</div>
+  <div class="subtitle">縦型ショート・自動生成システム</div>
+  <nav class="steps">
+    <div class="step active" data-step="1">01 走査</div>
+    <div class="step" data-step="2">02 解析</div>
+    <div class="step" data-step="3">03 生成</div>
+    <div class="step" data-step="4">04 予約</div>
+  </nav>
+  <div class="badge">SYSTEM ONLINE</div>
+  <div id="clock">00:00:00<small>JST</small></div>
+</header>
+
+<main>
+  <!-- ===== LEFT : RESEARCH ===== -->
+  <section class="panel" id="research">
+    <div class="panel-title">RESEARCH <span class="jp">バズ走査</span></div>
+    <div class="counter-block">
+      <div id="buzz-count">0<small>本</small></div>
+      <div class="counter-label">解析済み<br>バズ動画</div>
+    </div>
+    <div class="hooks-block">
+      <div class="hooks-head"><span>HOOK TYPES</span><span>伸びている型</span></div>
+      <div class="hook-row"><span>問題提起</span><span class="bar"><i data-hook="0"></i></span><span class="pct" data-hookpct="0">0%</span></div>
+      <div class="hook-row"><span>変化・比較</span><span class="bar"><i data-hook="1"></i></span><span class="pct" data-hookpct="1">0%</span></div>
+      <div class="hook-row"><span>ランキング</span><span class="bar"><i data-hook="2"></i></span><span class="pct" data-hookpct="2">0%</span></div>
+    </div>
+    <div id="feed"></div>
+    <div class="panel-foot">SRC YOUTUBE / TIKTOK &nbsp;·&nbsp; SCAN DAILY</div>
+  </section>
+
+  <!-- ===== RIGHT ===== -->
+  <div class="right-col">
+    <div class="url-bar">
+      <label for="product-url">PRODUCT URL</label>
+      <input id="product-url" type="url" placeholder="https://example.com/products/your-item" spellcheck="false">
+      <button id="generate-btn">生成開始</button>
+    </div>
+
+    <section class="panel" id="generator">
+      <div class="panel-title">GENERATOR <span class="jp">縦型ショート 3種同時生成</span></div>
+      <div class="gen-grid">
+        <div class="gen-card" id="card-a">
+          <div class="gen-card-head"><span class="tag">A</span><span class="name">問題提起型</span><button class="copy-btn" data-card="card-a">COPY</button></div>
+          <div class="gen-card-body"><div class="placeholder">STANDBY</div></div>
+        </div>
+        <div class="gen-card" id="card-b">
+          <div class="gen-card-head"><span class="tag">B</span><span class="name">ビフォーアフター型</span><button class="copy-btn" data-card="card-b">COPY</button></div>
+          <div class="gen-card-body"><div class="placeholder">STANDBY</div></div>
+        </div>
+        <div class="gen-card" id="card-c">
+          <div class="gen-card-head"><span class="tag">C</span><span class="name">ランキング型</span><button class="copy-btn" data-card="card-c">COPY</button></div>
+          <div class="gen-card-body"><div class="placeholder">STANDBY</div></div>
+        </div>
+      </div>
+      <div id="schedule">
+        <span class="sched-title">SCHEDULE 投稿予約</span>
+        <span class="sched-slot"><span class="k">A</span><span class="platform">TikTok</span><span class="time">本日 19:00</span></span>
+        <span class="sched-slot"><span class="k">B</span><span class="platform">YouTube Shorts</span><span class="time">本日 21:00</span></span>
+        <span class="sched-slot"><span class="k">C</span><span class="platform">Reels</span><span class="time">翌日 07:00</span></span>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <span class="cursor">▶</span>
+  <span id="status-text">システム初期化中...</span>
+  <span class="version">SHORTS FACTORY OS v1.0.2</span>
+</footer>
+
+<script>
+"use strict";
+
+/* ================= clock (JST) ================= */
+function tickClock() {
+  const now = new Date(Date.now() + (9 * 60 + new Date().getTimezoneOffset()) * 60000);
+  const p = n => String(n).padStart(2, "0");
+  document.getElementById("clock").innerHTML =
+    `${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}<small>JST</small>`;
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+/* ================= research simulation ================= */
+const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pick = arr => arr[rand(0, arr.length - 1)];
+
+let buzzCount = 0;
+const buzzTarget = 94;
+const countEl = document.getElementById("buzz-count");
+const countTimer = setInterval(() => {
+  buzzCount += rand(1, 4);
+  if (buzzCount >= buzzTarget) { buzzCount = buzzTarget; clearInterval(countTimer); startDrift(); }
+  countEl.innerHTML = `${buzzCount}<small>本</small>`;
+}, 90);
+function startDrift() {
+  setInterval(() => {
+    buzzCount += rand(0, 1);
+    countEl.innerHTML = `${buzzCount}<small>本</small>`;
+  }, 12000);
+}
+
+const hookPcts = [0, 0, 0];
+const hookTargets = [42, 31, 27];
+setTimeout(() => {
+  hookTargets.forEach((t, i) => {
+    hookPcts[i] = t;
+    document.querySelector(`[data-hook="${i}"]`).style.width = t + "%";
+    document.querySelector(`[data-hookpct="${i}"]`).textContent = t + "%";
+  });
+}, 600);
+
+const feedEl = document.getElementById("feed");
+const feedMsgs = [
+  ["yt", "YOUTUBE", "ショート走査", "保存"],
+  ["tk", "TIKTOK",  "バズ検知",   "型抽出"],
+  ["yt", "YOUTUBE", "上位100本",  "構成解析"],
+  ["tk", "TIKTOK",  "急上昇検知", "フック分類"],
+  ["yt", "YOUTUBE", "冒頭2秒解析", "保存"],
+  ["tk", "TIKTOK",  "コメント熱量", "スコア化"],
+];
+function fmtViews() {
+  return Math.random() < 0.5 ? (rand(11, 38) / 10).toFixed(1) + "M" : rand(120, 990) + "K";
+}
+function nowHM() {
+  const now = new Date(Date.now() + (9 * 60 + new Date().getTimezoneOffset()) * 60000);
+  const p = n => String(n).padStart(2, "0");
+  return `${p(now.getHours())}:${p(now.getMinutes())}`;
+}
+function addFeedLine() {
+  const [cls, src, act, tail] = pick(feedMsgs);
+  const line = document.createElement("div");
+  line.className = "feed-line";
+  line.innerHTML =
+    `<span class="t">${nowHM()}</span><span class="src ${cls}">${src}</span>` +
+    `<span class="msg">${act} <b>${fmtViews()}</b> ${tail}</span>`;
+  feedEl.appendChild(line);
+  while (feedEl.children.length > 14) feedEl.removeChild(feedEl.firstChild);
+}
+addFeedLine(); addFeedLine(); addFeedLine();
+setInterval(addFeedLine, rand(2500, 4000));
+
+/* ================= status bar ================= */
+const statusEl = document.getElementById("status-text");
+const idleStatuses = [
+  "バズショートを走査中 ・ フックと構成を解析しています",
+  "TikTok急上昇を監視中 ・ 伸びている型を抽出しています",
+  "YouTube Shorts上位を解析中 ・ 冒頭2秒のフックを分類しています",
+];
+let idleIdx = 0;
+let idleTimer = setInterval(rotateIdle, 7000);
+function rotateIdle() {
+  idleIdx = (idleIdx + 1) % idleStatuses.length;
+  statusEl.textContent = idleStatuses[idleIdx];
+}
+statusEl.textContent = idleStatuses[0];
+
+/* ================= step indicator ================= */
+function setStep(n) {
+  document.querySelectorAll(".step").forEach(el => {
+    const s = Number(el.dataset.step);
+    el.classList.toggle("active", s === n);
+    el.classList.toggle("done", s < n);
+  });
+}
+
+/* ================= product name extraction ================= */
+function extractProductName(url) {
+  try {
+    const u = new URL(url);
+    const segs = u.pathname.split("/").filter(s =>
+      s && !/^(products?|items?|dp|shop|store|detail|goods|p|jp|en)$/i.test(s) && !/^\d+$/.test(s));
+    let cand = segs.length ? segs[segs.length - 1] : u.hostname.replace(/^www\./, "").split(".")[0];
+    cand = decodeURIComponent(cand).replace(/[-_+]/g, " ").replace(/\.(html?|php)$/i, "").trim();
+    if (!cand || cand.length > 40) return "この商品";
+    return cand;
+  } catch { return "この商品"; }
+}
+
+/* ================= script templates ================= */
+function buildScripts(name) {
+  const tagBase = "#PR #ショート #" + (name === "この商品" ? "おすすめ" : name.replace(/\s+/g, ""));
+  const A = {
+    title: `「まだ損してるの？」問題提起型`,
+    lines: [
+      ["0-2秒", "フック", `え、まだそれで消耗してるの？`],
+      ["2-8秒", "共感", `毎日がんばってるのに結果が出ない…実はやり方の問題じゃなくて「道具」の問題かも。`],
+      ["8-20秒", "解決提示", `そこで見つけたのが ${name}。使い始めてから体感が全然違う。`],
+      ["20-40秒", "デモ", `実際の使用シーンをテンポよく3カット。ビフォーの不満→使用→変化の順で見せる。`],
+      ["40-55秒", "CTA", `詳細はプロフィールのリンクから。今だけの特典があるうちにチェック。`],
+    ],
+    tags: tagBase + " #悩み解決"
+  };
+  const B = {
+    title: `「1週間でこう変わった」ビフォーアフター型`,
+    lines: [
+      ["0-2秒", "フック", `左が1週間前の私。右が今。`],
+      ["2-10秒", "ビフォー", `正直、何を試してもダメだった頃の状態を正直に見せる。`],
+      ["10-20秒", "転機", `変わったきっかけは ${name} をルーティンに入れただけ。`],
+      ["20-40秒", "アフター", `変化を数字か見た目で提示。「たった◯日で」を画面テロップで強調。`],
+      ["40-55秒", "CTA", `同じ悩みの人はコメント欄の「🔥」だけ押して。リンクは概要欄に。`],
+    ],
+    tags: tagBase + " #ビフォーアフター #検証"
+  };
+  const C = {
+    title: `「ガチで買ってよかったTOP3」ランキング型`,
+    lines: [
+      ["0-2秒", "フック", `今年ガチで買ってよかったものTOP3、いきます。`],
+      ["2-12秒", "第3位", `定番だけど手堅い選択肢。サラッと紹介してテンポを作る。`],
+      ["12-24秒", "第2位", `意外性のある選択肢。「これは知らなかった」を狙う。`],
+      ["24-45秒", "第1位", `${name}。理由は3つ:①即効性 ②コスパ ③リピート率。ここに尺の半分を使う。`],
+      ["45-55秒", "CTA", `1位のリンクはプロフィールに置いておくね。売り切れ注意。`],
+    ],
+    tags: tagBase + " #ランキング #TOP3"
+  };
+  return { "card-a": A, "card-b": B, "card-c": C };
+}
+
+/* ================= generation pipeline ================= */
+const btn = document.getElementById("generate-btn");
+const urlInput = document.getElementById("product-url");
+
+btn.addEventListener("click", async () => {
+  const url = urlInput.value.trim();
+  if (!url) { urlInput.focus(); statusEl.textContent = "PRODUCT URL を入力してください"; return; }
+
+  btn.disabled = true;
+  btn.textContent = "生成中...";
+  clearInterval(idleTimer);
+  document.getElementById("schedule").classList.remove("visible");
+  document.querySelectorAll(".gen-card").forEach(c => {
+    c.classList.remove("filled");
+    c.querySelector(".gen-card-body").innerHTML = `<div class="placeholder">STANDBY</div>`;
+  });
+
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const name = extractProductName(url);
+
+  setStep(1);
+  statusEl.textContent = `商品ページを走査中 ... ${url}`;
+  await wait(1200);
+
+  setStep(2);
+  statusEl.textContent = `構成を解析中 ... バズ${buzzCount}本の型と照合しています`;
+  await wait(1400);
+
+  setStep(3);
+  statusEl.textContent = `台本を生成中 ... 「${name}」× 3タイプ同時生成`;
+  const scripts = buildScripts(name);
+  await Promise.all(Object.entries(scripts).map(([id, s], i) => fillCard(id, s, i * 500)));
+
+  setStep(4);
+  statusEl.textContent = "生成完了 ・ 投稿枠を自動予約しました";
+  document.getElementById("schedule").classList.add("visible");
+
+  btn.disabled = false;
+  btn.textContent = "生成開始";
+  setTimeout(() => { idleTimer = setInterval(rotateIdle, 7000); }, 15000);
+});
+
+async function fillCard(id, script, delay) {
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  await wait(delay);
+  const card = document.getElementById(id);
+  const body = card.querySelector(".gen-card-body");
+  card.classList.add("filled");
+  body.innerHTML = "";
+
+  const title = document.createElement("div");
+  title.className = "script-line title-line";
+  title.textContent = script.title;
+  body.appendChild(title);
+  await wait(250);
+
+  for (const [tc, role, txt] of script.lines) {
+    const div = document.createElement("div");
+    div.className = "script-line";
+    div.innerHTML = `<span class="tc">${tc}</span><span class="role">${role}</span> <span class="txt"></span>`;
+    div.querySelector(".txt").textContent = txt;
+    body.appendChild(div);
+    body.scrollTop = body.scrollHeight;
+    await wait(280);
+  }
+
+  const tags = document.createElement("div");
+  tags.className = "script-line hashtags";
+  tags.textContent = script.tags;
+  body.appendChild(tags);
+  body.scrollTop = body.scrollHeight;
+}
+
+/* ================= copy ================= */
+document.querySelectorAll(".copy-btn").forEach(b => {
+  b.addEventListener("click", async () => {
+    const body = document.getElementById(b.dataset.card).querySelector(".gen-card-body");
+    const text = [...body.querySelectorAll(".script-line")].map(l => l.textContent.trim()).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      b.textContent = "COPIED";
+      setTimeout(() => (b.textContent = "COPY"), 1500);
+    } catch { b.textContent = "ERROR"; }
+  });
+});
+</script>
+</body>
+</html>
