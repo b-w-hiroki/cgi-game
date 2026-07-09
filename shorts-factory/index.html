@@ -16,6 +16,7 @@
     --amber-dim: #96712f;
     --amber-faint: #5c4620;
     --green: #7dd87d;
+    --red: #d24a3e;
     --font: "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, "Courier New", monospace;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -29,7 +30,6 @@
     flex-direction: column;
     overflow: hidden;
   }
-  /* CRT scanline overlay */
   body::after {
     content: "";
     position: fixed;
@@ -53,6 +53,7 @@
     padding: 12px 18px;
     border-bottom: 1px solid var(--line);
     background: linear-gradient(180deg, #191106, #100a03);
+    flex-wrap: wrap;
   }
   .logo {
     display: flex;
@@ -80,11 +81,7 @@
     padding-left: 16px;
     white-space: nowrap;
   }
-  nav.steps {
-    display: flex;
-    gap: 4px;
-    margin-left: auto;
-  }
+  nav.steps { display: flex; gap: 4px; margin-left: auto; }
   .step {
     padding: 4px 12px;
     font-size: 11px;
@@ -97,9 +94,21 @@
     color: #100a03;
     background: var(--amber);
     font-weight: 700;
-    text-shadow: none;
   }
   .step.done { color: var(--amber-bright); }
+  .hbtn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--amber-dim);
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .hbtn:hover { color: var(--amber-bright); border-color: var(--line-strong); }
+  .hbtn.on { color: var(--green); border-color: var(--green); }
   .badge {
     display: flex;
     align-items: center;
@@ -139,7 +148,6 @@
     padding: 14px 18px;
     min-height: 0;
   }
-
   .panel {
     background: var(--panel);
     border: 1px solid var(--line);
@@ -154,11 +162,12 @@
     color: var(--amber-bright);
     border-bottom: 1px solid var(--line);
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 10px;
   }
   .panel-title::before { content: "■"; font-size: 8px; }
   .panel-title .jp { color: var(--amber-dim); letter-spacing: 1px; }
+  .panel-title .toggle-hint { display: none; margin-left: auto; color: var(--amber-faint); }
 
   /* ---- Left: research ---- */
   #research { overflow: hidden; }
@@ -222,8 +231,8 @@
   .feed-line { display: flex; gap: 8px; opacity: 0; animation: fadein 0.4s forwards; white-space: nowrap; overflow: hidden; }
   @keyframes fadein { to { opacity: 1; } }
   .feed-line .t { color: var(--amber-faint); }
-  .feed-line .src { color: #d24a3e; font-weight: 700; min-width: 58px; }
-  .feed-line .src.yt { color: #d24a3e; }
+  .feed-line .src { font-weight: 700; min-width: 58px; }
+  .feed-line .src.yt { color: var(--red); }
   .feed-line .src.tk { color: #4ec3c9; }
   .feed-line .msg { color: var(--amber); }
   .feed-line .msg b { color: var(--amber-bright); }
@@ -237,17 +246,18 @@
 
   /* ---- Right column ---- */
   .right-col { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .input-block { background: var(--panel); border: 1px solid var(--line); }
   .url-bar {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 12px 14px;
-    background: var(--panel);
-    border: 1px solid var(--line);
+    flex-wrap: wrap;
   }
   .url-bar label { font-size: 11px; letter-spacing: 2px; color: var(--amber-dim); white-space: nowrap; }
-  #product-url {
+  .tinput {
     flex: 1;
+    min-width: 160px;
     background: #0c0803;
     border: 1px solid var(--line-strong);
     color: var(--amber-bright);
@@ -256,8 +266,8 @@
     padding: 8px 12px;
     outline: none;
   }
-  #product-url:focus { box-shadow: 0 0 12px rgba(240, 170, 60, 0.25); }
-  #product-url::placeholder { color: var(--amber-faint); }
+  .tinput:focus { box-shadow: 0 0 12px rgba(240, 170, 60, 0.25); }
+  .tinput::placeholder { color: var(--amber-faint); }
   #generate-btn {
     background: var(--amber);
     color: #100a03;
@@ -272,8 +282,40 @@
   }
   #generate-btn:hover { background: var(--amber-bright); box-shadow: 0 0 14px rgba(255, 196, 86, 0.45); }
   #generate-btn:disabled { background: var(--amber-faint); cursor: wait; }
+  #detail-toggle {
+    background: none;
+    border: none;
+    color: var(--amber-dim);
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    padding: 0 14px 10px;
+  }
+  #detail-toggle:hover { color: var(--amber-bright); }
+  #detail-row {
+    display: none;
+    gap: 12px;
+    padding: 0 14px 12px;
+    flex-wrap: wrap;
+  }
+  #detail-row.open { display: flex; }
+  #detail-row .field { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px; }
+  #detail-row .field span { font-size: 9px; letter-spacing: 2px; color: var(--amber-faint); }
 
   #generator { flex: 1; }
+  #generator .panel-title .gbtn { margin-left: auto; }
+  .gbtn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--amber-dim);
+    font-family: var(--font);
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    cursor: pointer;
+  }
+  .gbtn:hover { color: var(--amber-bright); border-color: var(--line-strong); }
   .gen-grid {
     flex: 1;
     display: grid;
@@ -299,25 +341,11 @@
     border-bottom: 1px dashed var(--line);
   }
   .gen-card.filled .gen-card-head { border-bottom-style: solid; }
-  .gen-card-head .tag {
-    color: var(--amber-faint);
-    font-weight: 700;
-  }
+  .gen-card-head .tag { color: var(--amber-faint); font-weight: 700; }
   .gen-card-head .name { color: var(--amber-bright); letter-spacing: 1px; }
-  .copy-btn {
-    margin-left: auto;
-    background: none;
-    border: 1px solid var(--line);
-    color: var(--amber-dim);
-    font-family: var(--font);
-    font-size: 9px;
-    letter-spacing: 1px;
-    padding: 2px 8px;
-    cursor: pointer;
-    visibility: hidden;
-  }
-  .gen-card.filled .copy-btn { visibility: visible; }
-  .copy-btn:hover { color: var(--amber-bright); border-color: var(--line-strong); }
+  .card-btns { margin-left: auto; display: flex; gap: 5px; visibility: hidden; }
+  .gen-card.filled .card-btns { visibility: visible; }
+  .card-btns .gbtn { padding: 2px 8px; }
   .gen-card-body {
     flex: 1;
     overflow-y: auto;
@@ -329,6 +357,7 @@
   .gen-card-body::-webkit-scrollbar-thumb { background: var(--amber-faint); }
   .gen-card-body .placeholder {
     height: 100%;
+    min-height: 80px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -358,6 +387,7 @@
     gap: 20px;
     font-size: 11px;
     align-items: center;
+    flex-wrap: wrap;
   }
   #schedule.visible { display: flex; }
   #schedule .sched-title { color: var(--amber-dim); letter-spacing: 2px; font-size: 10px; }
@@ -365,6 +395,57 @@
   .sched-slot .k { color: var(--amber-faint); font-weight: 700; }
   .sched-slot .platform { color: var(--amber-bright); }
   .sched-slot .time { color: var(--green); }
+
+  /* ============ OVERLAYS (history / settings) ============ */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 3, 0, 0.75);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    width: min(560px, 100%);
+    max-height: 80vh;
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 0 40px rgba(240, 170, 60, 0.15);
+    display: flex;
+    flex-direction: column;
+  }
+  .modal .panel-title { justify-content: flex-start; }
+  .modal .panel-title .close {
+    margin-left: auto;
+    cursor: pointer;
+    color: var(--amber-dim);
+    background: none;
+    border: none;
+    font-family: var(--font);
+    font-size: 13px;
+  }
+  .modal .panel-title .close:hover { color: var(--amber-bright); }
+  .modal-body { padding: 14px; overflow-y: auto; font-size: 12px; line-height: 1.8; }
+  .hist-item {
+    border: 1px solid var(--line);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 11px;
+  }
+  .hist-item .when { color: var(--amber-faint); white-space: nowrap; }
+  .hist-item .hname { color: var(--amber-bright); font-weight: 700; }
+  .hist-item .hurl { color: var(--amber-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .hist-item .gbtn { flex-shrink: 0; }
+  .empty-note { color: var(--amber-faint); text-align: center; padding: 20px 0; letter-spacing: 2px; font-size: 10px; }
+  .settings-note { color: var(--amber-dim); font-size: 10px; margin-top: 10px; line-height: 1.7; }
+  .settings-note b { color: var(--amber-bright); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 12px; }
 
   /* ============ STATUS BAR ============ */
   footer {
@@ -378,15 +459,26 @@
   }
   footer .cursor { color: var(--amber-bright); animation: blink 1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
-  #status-text { color: var(--amber); letter-spacing: 1px; }
-  footer .version { margin-left: auto; color: var(--amber-faint); letter-spacing: 2px; font-size: 9px; }
+  #status-text { color: var(--amber); letter-spacing: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  footer .version { margin-left: auto; color: var(--amber-faint); letter-spacing: 2px; font-size: 9px; white-space: nowrap; }
 
+  /* ============ MOBILE ============ */
   @media (max-width: 900px) {
     body { overflow: auto; }
     main { grid-template-columns: 1fr; }
     .gen-grid { grid-template-columns: 1fr; }
-    nav.steps { display: none; }
+    .gen-card { min-height: 120px; }
+    nav.steps { order: 10; width: 100%; margin-left: 0; justify-content: space-between; }
     .subtitle { display: none; }
+    #clock { font-size: 15px; }
+    /* research panel collapses to header + counter; tap title to expand */
+    #research .hooks-block, #research #feed, #research .panel-foot { display: none; }
+    #research.expanded .hooks-block { display: block; }
+    #research.expanded #feed { display: flex; max-height: 180px; min-height: 120px; }
+    #research.expanded .panel-foot { display: block; }
+    #research .panel-title { cursor: pointer; }
+    #research .panel-title .toggle-hint { display: inline; }
+    #buzz-count { font-size: 36px; }
   }
 </style>
 </head>
@@ -401,6 +493,8 @@
     <div class="step" data-step="3">03 生成</div>
     <div class="step" data-step="4">04 予約</div>
   </nav>
+  <button class="hbtn" id="history-btn">HISTORY</button>
+  <button class="hbtn" id="settings-btn">API ⚙</button>
   <div class="badge">SYSTEM ONLINE</div>
   <div id="clock">00:00:00<small>JST</small></div>
 </header>
@@ -408,7 +502,7 @@
 <main>
   <!-- ===== LEFT : RESEARCH ===== -->
   <section class="panel" id="research">
-    <div class="panel-title">RESEARCH <span class="jp">バズ走査</span></div>
+    <div class="panel-title" id="research-title">RESEARCH <span class="jp">バズ走査</span><span class="toggle-hint">▾ 展開</span></div>
     <div class="counter-block">
       <div id="buzz-count">0<small>本</small></div>
       <div class="counter-label">解析済み<br>バズ動画</div>
@@ -425,64 +519,117 @@
 
   <!-- ===== RIGHT ===== -->
   <div class="right-col">
-    <div class="url-bar">
-      <label for="product-url">PRODUCT URL</label>
-      <input id="product-url" type="url" placeholder="https://example.com/products/your-item" spellcheck="false">
-      <button id="generate-btn">生成開始</button>
+    <div class="input-block">
+      <div class="url-bar">
+        <label for="product-url">PRODUCT URL</label>
+        <input id="product-url" class="tinput" type="url" placeholder="https://example.com/products/your-item" spellcheck="false">
+        <button id="generate-btn">生成開始</button>
+      </div>
+      <button id="detail-toggle">▸ 商品名・特徴を手動入力(任意)</button>
+      <div id="detail-row">
+        <div class="field">
+          <span>PRODUCT NAME 商品名(URLからの推定より優先)</span>
+          <input id="product-name" class="tinput" type="text" placeholder="例: ミライ美容液" spellcheck="false">
+        </div>
+        <div class="field">
+          <span>FEATURES 特徴・推しポイント(台本に反映)</span>
+          <input id="product-features" class="tinput" type="text" placeholder="例: 塗って寝るだけ、無添加、初回半額" spellcheck="false">
+        </div>
+      </div>
     </div>
 
     <section class="panel" id="generator">
-      <div class="panel-title">GENERATOR <span class="jp">縦型ショート 3種同時生成</span></div>
+      <div class="panel-title">GENERATOR <span class="jp">縦型ショート 3種同時生成</span>
+        <button class="gbtn" id="copy-all-btn" style="display:none">3本まとめてコピー</button>
+      </div>
       <div class="gen-grid">
         <div class="gen-card" id="card-a">
-          <div class="gen-card-head"><span class="tag">A</span><span class="name">問題提起型</span><button class="copy-btn" data-card="card-a">COPY</button></div>
+          <div class="gen-card-head"><span class="tag">A</span><span class="name">問題提起型</span>
+            <span class="card-btns"><button class="gbtn regen-btn" data-type="a">↻ 再生成</button><button class="gbtn copy-btn" data-card="card-a">COPY</button></span>
+          </div>
           <div class="gen-card-body"><div class="placeholder">STANDBY</div></div>
         </div>
         <div class="gen-card" id="card-b">
-          <div class="gen-card-head"><span class="tag">B</span><span class="name">ビフォーアフター型</span><button class="copy-btn" data-card="card-b">COPY</button></div>
+          <div class="gen-card-head"><span class="tag">B</span><span class="name">ビフォーアフター型</span>
+            <span class="card-btns"><button class="gbtn regen-btn" data-type="b">↻ 再生成</button><button class="gbtn copy-btn" data-card="card-b">COPY</button></span>
+          </div>
           <div class="gen-card-body"><div class="placeholder">STANDBY</div></div>
         </div>
         <div class="gen-card" id="card-c">
-          <div class="gen-card-head"><span class="tag">C</span><span class="name">ランキング型</span><button class="copy-btn" data-card="card-c">COPY</button></div>
+          <div class="gen-card-head"><span class="tag">C</span><span class="name">ランキング型</span>
+            <span class="card-btns"><button class="gbtn regen-btn" data-type="c">↻ 再生成</button><button class="gbtn copy-btn" data-card="card-c">COPY</button></span>
+          </div>
           <div class="gen-card-body"><div class="placeholder">STANDBY</div></div>
         </div>
       </div>
-      <div id="schedule">
-        <span class="sched-title">SCHEDULE 投稿予約</span>
-        <span class="sched-slot"><span class="k">A</span><span class="platform">TikTok</span><span class="time">本日 19:00</span></span>
-        <span class="sched-slot"><span class="k">B</span><span class="platform">YouTube Shorts</span><span class="time">本日 21:00</span></span>
-        <span class="sched-slot"><span class="k">C</span><span class="platform">Reels</span><span class="time">翌日 07:00</span></span>
-      </div>
+      <div id="schedule"><span class="sched-title">SCHEDULE 投稿予約</span></div>
     </section>
   </div>
 </main>
 
+<!-- ===== HISTORY OVERLAY ===== -->
+<div class="overlay" id="history-overlay">
+  <div class="modal">
+    <div class="panel-title">HISTORY <span class="jp">生成履歴(この端末のみ)</span><button class="close" data-close="history-overlay">✕</button></div>
+    <div class="modal-body" id="history-list"></div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS OVERLAY ===== -->
+<div class="overlay" id="settings-overlay">
+  <div class="modal">
+    <div class="panel-title">API MODE <span class="jp">Claude API連携(任意)</span><button class="close" data-close="settings-overlay">✕</button></div>
+    <div class="modal-body">
+      <div class="field">
+        <span style="font-size:9px;letter-spacing:2px;color:var(--amber-faint)">ANTHROPIC API KEY</span>
+        <input id="api-key-input" class="tinput" type="password" placeholder="sk-ant-..." spellcheck="false" style="width:100%">
+      </div>
+      <div class="settings-note">
+        キーを設定すると、台本生成が <b>claude-sonnet-5</b> による本物のAI生成に切り替わります(商品URL・商品名・特徴をもとに生成)。
+        未設定・生成失敗時は内蔵テンプレートで生成します。<br>
+        <b>注意:</b> キーはこの端末のブラウザ(localStorage)にのみ保存され、外部には送信されません(Anthropic APIへの直接リクエストを除く)。
+        共有PCでは設定しないでください。
+      </div>
+      <div class="modal-actions">
+        <button class="gbtn" id="api-key-save">保存</button>
+        <button class="gbtn" id="api-key-clear">削除</button>
+        <span id="api-key-status" style="font-size:10px;color:var(--amber-dim);align-self:center"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer>
   <span class="cursor">▶</span>
   <span id="status-text">システム初期化中...</span>
-  <span class="version">SHORTS FACTORY OS v1.0.2</span>
+  <span class="version">SHORTS FACTORY OS v1.1.0</span>
 </footer>
 
 <script>
 "use strict";
 
-/* ================= clock (JST) ================= */
+/* ================= utils ================= */
+const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pick = arr => arr[rand(0, arr.length - 1)];
+const $ = id => document.getElementById(id);
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function jstNow() {
+  return new Date(Date.now() + (9 * 60 + new Date().getTimezoneOffset()) * 60000);
+}
+const pad = n => String(n).padStart(2, "0");
+
+/* ================= clock ================= */
 function tickClock() {
-  const now = new Date(Date.now() + (9 * 60 + new Date().getTimezoneOffset()) * 60000);
-  const p = n => String(n).padStart(2, "0");
-  document.getElementById("clock").innerHTML =
-    `${p(now.getHours())}:${p(now.getMinutes())}:${p(now.getSeconds())}<small>JST</small>`;
+  const now = jstNow();
+  $("clock").innerHTML = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}<small>JST</small>`;
 }
 setInterval(tickClock, 1000);
 tickClock();
 
 /* ================= research simulation ================= */
-const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const pick = arr => arr[rand(0, arr.length - 1)];
-
 let buzzCount = 0;
 const buzzTarget = 94;
-const countEl = document.getElementById("buzz-count");
+const countEl = $("buzz-count");
 const countTimer = setInterval(() => {
   buzzCount += rand(1, 4);
   if (buzzCount >= buzzTarget) { buzzCount = buzzTarget; clearInterval(countTimer); startDrift(); }
@@ -495,17 +642,15 @@ function startDrift() {
   }, 12000);
 }
 
-const hookPcts = [0, 0, 0];
 const hookTargets = [42, 31, 27];
 setTimeout(() => {
   hookTargets.forEach((t, i) => {
-    hookPcts[i] = t;
     document.querySelector(`[data-hook="${i}"]`).style.width = t + "%";
     document.querySelector(`[data-hookpct="${i}"]`).textContent = t + "%";
   });
 }, 600);
 
-const feedEl = document.getElementById("feed");
+const feedEl = $("feed");
 const feedMsgs = [
   ["yt", "YOUTUBE", "ショート走査", "保存"],
   ["tk", "TIKTOK",  "バズ検知",   "型抽出"],
@@ -514,20 +659,14 @@ const feedMsgs = [
   ["yt", "YOUTUBE", "冒頭2秒解析", "保存"],
   ["tk", "TIKTOK",  "コメント熱量", "スコア化"],
 ];
-function fmtViews() {
-  return Math.random() < 0.5 ? (rand(11, 38) / 10).toFixed(1) + "M" : rand(120, 990) + "K";
-}
-function nowHM() {
-  const now = new Date(Date.now() + (9 * 60 + new Date().getTimezoneOffset()) * 60000);
-  const p = n => String(n).padStart(2, "0");
-  return `${p(now.getHours())}:${p(now.getMinutes())}`;
-}
+const fmtViews = () => Math.random() < 0.5 ? (rand(11, 38) / 10).toFixed(1) + "M" : rand(120, 990) + "K";
 function addFeedLine() {
   const [cls, src, act, tail] = pick(feedMsgs);
+  const now = jstNow();
   const line = document.createElement("div");
   line.className = "feed-line";
   line.innerHTML =
-    `<span class="t">${nowHM()}</span><span class="src ${cls}">${src}</span>` +
+    `<span class="t">${pad(now.getHours())}:${pad(now.getMinutes())}</span><span class="src ${cls}">${src}</span>` +
     `<span class="msg">${act} <b>${fmtViews()}</b> ${tail}</span>`;
   feedEl.appendChild(line);
   while (feedEl.children.length > 14) feedEl.removeChild(feedEl.firstChild);
@@ -535,8 +674,16 @@ function addFeedLine() {
 addFeedLine(); addFeedLine(); addFeedLine();
 setInterval(addFeedLine, rand(2500, 4000));
 
+/* mobile: tap research title to expand/collapse */
+$("research-title").addEventListener("click", () => {
+  const r = $("research");
+  r.classList.toggle("expanded");
+  document.querySelector("#research-title .toggle-hint").textContent =
+    r.classList.contains("expanded") ? "▴ 閉じる" : "▾ 展開";
+});
+
 /* ================= status bar ================= */
-const statusEl = document.getElementById("status-text");
+const statusEl = $("status-text");
 const idleStatuses = [
   "バズショートを走査中 ・ フックと構成を解析しています",
   "TikTok急上昇を監視中 ・ 伸びている型を抽出しています",
@@ -549,6 +696,8 @@ function rotateIdle() {
   statusEl.textContent = idleStatuses[idleIdx];
 }
 statusEl.textContent = idleStatuses[0];
+function pauseIdle() { clearInterval(idleTimer); }
+function resumeIdleSoon() { setTimeout(() => { clearInterval(idleTimer); idleTimer = setInterval(rotateIdle, 7000); }, 15000); }
 
 /* ================= step indicator ================= */
 function setStep(n) {
@@ -559,7 +708,13 @@ function setStep(n) {
   });
 }
 
-/* ================= product name extraction ================= */
+/* ================= product info ================= */
+$("detail-toggle").addEventListener("click", () => {
+  const row = $("detail-row");
+  row.classList.toggle("open");
+  $("detail-toggle").textContent = (row.classList.contains("open") ? "▾" : "▸") + " 商品名・特徴を手動入力(任意)";
+});
+
 function extractProductName(url) {
   try {
     const u = new URL(url);
@@ -572,91 +727,361 @@ function extractProductName(url) {
   } catch { return "この商品"; }
 }
 
-/* ================= script templates ================= */
-function buildScripts(name) {
-  const tagBase = "#PR #ショート #" + (name === "この商品" ? "おすすめ" : name.replace(/\s+/g, ""));
-  const A = {
-    title: `「まだ損してるの？」問題提起型`,
+/* ================= genre detection ================= */
+const GENRES = {
+  beauty: {
+    re: /(serum|cosme|beauty|skin|lotion|shampoo|hair|nail|makeup|美容|コスメ|スキンケア|化粧)/i,
+    pain: ["肌のゆらぎ", "毛穴の目立ち", "乾燥によるくすみ", "朝のメイクノリの悪さ"],
+    gain: ["すっぴんに自信が持てる", "鏡を見るのが楽しくなる", "ファンデが薄づきで済む"],
+    proof: ["リピート率", "SNSでの口コミ数", "@cosme系の評価"],
+    tag: "#美容 #スキンケア",
+  },
+  gadget: {
+    re: /(gadget|tech|pc|keyboard|mouse|charger|earbuds|camera|ガジェット|家電|充電)/i,
+    pain: ["毎日の細かいストレス", "作業効率の頭打ち", "配線まわりのゴチャつき"],
+    gain: ["作業時間が目に見えて減る", "デスクが一気に垢抜ける", "外出先でも困らなくなる"],
+    proof: ["レビュー件数", "指名買いの多さ", "再入荷待ちの列"],
+    tag: "#ガジェット #便利グッズ",
+  },
+  health: {
+    re: /(diet|protein|supplement|fitness|gym|sleep|健康|ダイエット|サプリ|睡眠|筋トレ)/i,
+    pain: ["続かない習慣", "なかなか落ちない体重", "朝起きられないだるさ"],
+    gain: ["体が軽くなる感覚", "服のサイズが変わる", "朝スッと起きられる"],
+    proof: ["継続率", "ビフォーアフター投稿の多さ", "専門家の推薦"],
+    tag: "#ダイエット #健康習慣",
+  },
+  food: {
+    re: /(food|coffee|tea|snack|meal|recipe|グルメ|コーヒー|お取り寄せ|レトルト)/i,
+    pain: ["マンネリな食卓", "自炊する時間のなさ", "コンビニ飯の罪悪感"],
+    gain: ["家がちょっといい店になる", "5分で満足度の高い一食", "手土産で外さなくなる"],
+    proof: ["お取り寄せランキング", "リピーターの多さ", "行列のできる実店舗"],
+    tag: "#グルメ #お取り寄せ",
+  },
+  generic: {
+    re: /$^/,
+    pain: ["毎日の地味な悩み", "なんとなくの不便", "時間とお金のムダ"],
+    gain: ["生活の質が一段上がる", "使う前に戻れなくなる", "周りに勧めたくなる"],
+    proof: ["レビュー評価", "リピート率", "SNSでの話題性"],
+    tag: "#おすすめ #QOL爆上げ",
+  },
+};
+function detectGenre(url, name, features) {
+  const hay = `${url} ${name} ${features}`;
+  for (const [key, g] of Object.entries(GENRES)) {
+    if (key !== "generic" && g.re.test(hay)) return key;
+  }
+  return "generic";
+}
+
+/* ================= script templates (with variations) ================= */
+function buildScript(type, ctx) {
+  const { name, features } = ctx;
+  const v = GENRES[ctx.genre];
+  const pain = pick(v.pain), gain = pick(v.gain), proof = pick(v.proof);
+  const featTxt = features ? `ポイントは「${features}」。` : "";
+  const nameTag = name === "この商品" ? "おすすめ" : name.replace(/\s+/g, "");
+  const tags = `#PR #ショート #${nameTag} ${v.tag}`;
+
+  if (type === "a") {
+    return {
+      title: pick([
+        "「まだ損してるの?」問題提起型",
+        "「それ、放置してない?」問題提起型",
+        "「9割が知らない」問題提起型",
+      ]),
+      lines: [
+        ["0-2秒", "フック", pick([
+          `え、まだ${pain}で消耗してるの?`,
+          `${pain}、実は放置するほど損してます。`,
+          `【気づいてない人多すぎ】${pain}の正体。`,
+        ])],
+        ["2-8秒", "共感", pick([
+          `毎日がんばってるのに変わらない…それ、やり方じゃなくて「道具」の問題かも。`,
+          `私も半年悩みました。調べまくって行き着いた答えがこれ。`,
+          `コメント欄でも同じ悩みが殺到。でも解決策はシンプルでした。`,
+        ])],
+        ["8-20秒", "解決提示", `そこで見つけたのが ${name}。${featTxt}使い始めてから体感が全然違う。`],
+        ["20-40秒", "デモ", pick([
+          `実際の使用シーンを3カットでテンポよく。不満→使用→変化の順で見せる。`,
+          `画面テロップで「before→after」を数字つきで提示。${proof}も添えると説得力UP。`,
+          `手元アップ→引きの順で使用感を見せ、${gain}ことを一言で言い切る。`,
+        ])],
+        ["40-55秒", "CTA", pick([
+          `詳細はプロフィールのリンクから。特典があるうちにチェック。`,
+          `迷ってる人はコメントに「🔥」だけ押して。リンクはプロフに。`,
+          `保存しておくと後で見返せます。リンクは概要欄へ。`,
+        ])],
+      ],
+      tags: tags + " #悩み解決",
+    };
+  }
+  if (type === "b") {
+    const period = pick(["1週間", "2週間", "1ヶ月"]);
+    return {
+      title: pick([
+        `「${period}でこう変わった」ビフォーアフター型`,
+        `「${period}前の自分に教えたい」ビフォーアフター型`,
+      ]),
+      lines: [
+        ["0-2秒", "フック", pick([
+          `左が${period}前の私。右が今。`,
+          `${period}前の自分に見せたら泣くと思う。`,
+          `たった${period}でここまで変わるとは思わなかった。`,
+        ])],
+        ["2-10秒", "ビフォー", pick([
+          `正直、何を試してもダメだった頃の状態をそのまま見せる。${pain}が一番のストレスだった。`,
+          `過去の写真・記録を出して「盛ってない」ことを示す。`,
+        ])],
+        ["10-20秒", "転機", `変わったきっかけは ${name} をルーティンに入れただけ。${featTxt}`],
+        ["20-40秒", "アフター", pick([
+          `変化を数字か見た目で提示。「たった${period}で」を画面テロップで強調。${gain}のが最高。`,
+          `使用中の様子を早回しで。${proof}のスクショを重ねると信頼感が出る。`,
+        ])],
+        ["40-55秒", "CTA", pick([
+          `同じ悩みの人はコメント欄に「🔥」だけ押して。リンクは概要欄に。`,
+          `やり方の詳細はプロフのリンクにまとめました。`,
+        ])],
+      ],
+      tags: tags + " #ビフォーアフター #検証",
+    };
+  }
+  return {
+    title: pick([
+      "「ガチで買ってよかったTOP3」ランキング型",
+      "「後悔しない買い物TOP3」ランキング型",
+    ]),
     lines: [
-      ["0-2秒", "フック", `え、まだそれで消耗してるの？`],
-      ["2-8秒", "共感", `毎日がんばってるのに結果が出ない…実はやり方の問題じゃなくて「道具」の問題かも。`],
-      ["8-20秒", "解決提示", `そこで見つけたのが ${name}。使い始めてから体感が全然違う。`],
-      ["20-40秒", "デモ", `実際の使用シーンをテンポよく3カット。ビフォーの不満→使用→変化の順で見せる。`],
-      ["40-55秒", "CTA", `詳細はプロフィールのリンクから。今だけの特典があるうちにチェック。`],
+      ["0-2秒", "フック", pick([
+        `今年ガチで買ってよかったものTOP3、いきます。`,
+        `${GENRES[ctx.genre].tag.split(" ")[0].slice(1)}ジャンルで後悔しなかったTOP3を発表。`,
+        `1000円台〜で人生変わった買い物TOP3。`,
+      ])],
+      ["2-12秒", "第3位", pick([
+        `定番だけど手堅い選択肢。サラッと紹介してテンポを作る。`,
+        `「知ってる人は知ってる」枠。視聴維持のためテンポ重視で15秒以内に。`,
+      ])],
+      ["12-24秒", "第2位", pick([
+        `意外性のある選択肢。「これは知らなかった」を狙う。`,
+        `コスパ枠。価格を先に出して「え、安っ」を取りにいく。`,
+      ])],
+      ["24-45秒", "第1位", `${name}。${featTxt}理由は3つ: ①${gain} ②${proof}が桁違い ③リピート確定。ここに尺の半分を使う。`],
+      ["45-55秒", "CTA", pick([
+        `1位のリンクはプロフィールに置いておくね。売り切れ注意。`,
+        `全部の比較表はコメント欄に固定しておきます。`,
+      ])],
     ],
-    tags: tagBase + " #悩み解決"
+    tags: tags + " #ランキング #TOP3",
   };
-  const B = {
-    title: `「1週間でこう変わった」ビフォーアフター型`,
-    lines: [
-      ["0-2秒", "フック", `左が1週間前の私。右が今。`],
-      ["2-10秒", "ビフォー", `正直、何を試してもダメだった頃の状態を正直に見せる。`],
-      ["10-20秒", "転機", `変わったきっかけは ${name} をルーティンに入れただけ。`],
-      ["20-40秒", "アフター", `変化を数字か見た目で提示。「たった◯日で」を画面テロップで強調。`],
-      ["40-55秒", "CTA", `同じ悩みの人はコメント欄の「🔥」だけ押して。リンクは概要欄に。`],
-    ],
-    tags: tagBase + " #ビフォーアフター #検証"
-  };
-  const C = {
-    title: `「ガチで買ってよかったTOP3」ランキング型`,
-    lines: [
-      ["0-2秒", "フック", `今年ガチで買ってよかったものTOP3、いきます。`],
-      ["2-12秒", "第3位", `定番だけど手堅い選択肢。サラッと紹介してテンポを作る。`],
-      ["12-24秒", "第2位", `意外性のある選択肢。「これは知らなかった」を狙う。`],
-      ["24-45秒", "第1位", `${name}。理由は3つ:①即効性 ②コスパ ③リピート率。ここに尺の半分を使う。`],
-      ["45-55秒", "CTA", `1位のリンクはプロフィールに置いておくね。売り切れ注意。`],
-    ],
-    tags: tagBase + " #ランキング #TOP3"
-  };
-  return { "card-a": A, "card-b": B, "card-c": C };
+}
+function buildAllScripts(ctx) {
+  return { a: buildScript("a", ctx), b: buildScript("b", ctx), c: buildScript("c", ctx) };
+}
+
+/* ================= Claude API mode (optional) ================= */
+const API_KEY_STORE = "sf_api_key";
+async function generateViaAPI(ctx) {
+  const key = localStorage.getItem(API_KEY_STORE);
+  if (!key) return null;
+  const prompt = `あなたは縦型ショート動画(55秒)の放送作家です。以下の商品のアフィリエイト用ショート動画台本を3タイプ作成してください。
+
+商品URL: ${ctx.url}
+商品名: ${ctx.name}
+特徴: ${ctx.features || "(不明。URLと商品名から推測)"}
+
+次のJSONだけを出力してください(説明文なし):
+{"a":{"title":"...問題提起型","lines":[["0-2秒","フック","..."],["2-8秒","共感","..."],["8-20秒","解決提示","..."],["20-40秒","デモ","..."],["40-55秒","CTA","..."]],"tags":"#..."},
+ "b":{"title":"...ビフォーアフター型","lines":[[5本、同形式]],"tags":"#..."},
+ "c":{"title":"...ランキング型","lines":[[5本、同形式。第1位がこの商品]],"tags":"#..."}}
+
+各セリフは日本語で、実際に読み上げられる具体的な文章にしてください。`;
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model: "claude-sonnet-5",
+      max_tokens: 2500,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  const data = await res.json();
+  const text = (data.content || []).map(c => c.text || "").join("");
+  const json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+  for (const t of ["a", "b", "c"]) {
+    if (!json[t] || !json[t].title || !Array.isArray(json[t].lines)) throw new Error("bad shape");
+  }
+  return json;
+}
+
+/* settings modal */
+function openOverlay(id) { $(id).classList.add("open"); }
+document.querySelectorAll(".close").forEach(b =>
+  b.addEventListener("click", () => $(b.dataset.close).classList.remove("open")));
+document.querySelectorAll(".overlay").forEach(o =>
+  o.addEventListener("click", e => { if (e.target === o) o.classList.remove("open"); }));
+
+$("settings-btn").addEventListener("click", () => {
+  $("api-key-input").value = localStorage.getItem(API_KEY_STORE) || "";
+  updateApiStatus();
+  openOverlay("settings-overlay");
+});
+function updateApiStatus() {
+  const on = !!localStorage.getItem(API_KEY_STORE);
+  $("api-key-status").textContent = on ? "API MODE: ON (claude-sonnet-5)" : "API MODE: OFF (テンプレート生成)";
+  $("settings-btn").classList.toggle("on", on);
+}
+$("api-key-save").addEventListener("click", () => {
+  const v = $("api-key-input").value.trim();
+  if (v) localStorage.setItem(API_KEY_STORE, v);
+  updateApiStatus();
+});
+$("api-key-clear").addEventListener("click", () => {
+  localStorage.removeItem(API_KEY_STORE);
+  $("api-key-input").value = "";
+  updateApiStatus();
+});
+updateApiStatus();
+
+/* ================= schedule (dynamic golden-time slots) ================= */
+function nextSlots(count) {
+  const golden = [7, 12, 19, 21];
+  const now = jstNow();
+  const slots = [];
+  for (let dayOffset = 0; slots.length < count && dayOffset < 4; dayOffset++) {
+    for (const h of golden) {
+      if (dayOffset === 0 && h <= now.getHours()) continue;
+      slots.push({ dayOffset, h });
+      if (slots.length === count) break;
+    }
+  }
+  const dayLabel = ["本日", "翌日", "翌々日", "3日後"];
+  return slots.map(s => `${dayLabel[s.dayOffset]} ${pad(s.h)}:00`);
+}
+function renderSchedule() {
+  const slots = nextSlots(3);
+  const platforms = ["TikTok", "YouTube Shorts", "Reels"];
+  const el = $("schedule");
+  el.innerHTML = `<span class="sched-title">SCHEDULE 投稿予約</span>` +
+    ["A", "B", "C"].map((k, i) =>
+      `<span class="sched-slot"><span class="k">${k}</span><span class="platform">${platforms[i]}</span><span class="time">${slots[i]}</span></span>`
+    ).join("");
+  el.classList.add("visible");
+}
+
+/* ================= history ================= */
+const HIST_STORE = "sf_history";
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_STORE)) || []; } catch { return []; }
+}
+function saveToHistory(entry) {
+  const h = loadHistory();
+  h.unshift(entry);
+  localStorage.setItem(HIST_STORE, JSON.stringify(h.slice(0, 10)));
+}
+$("history-btn").addEventListener("click", () => {
+  renderHistory();
+  openOverlay("history-overlay");
+});
+function renderHistory() {
+  const list = $("history-list");
+  const h = loadHistory();
+  if (!h.length) { list.innerHTML = `<div class="empty-note">NO HISTORY — まだ生成履歴がありません</div>`; return; }
+  list.innerHTML = "";
+  h.forEach((e, i) => {
+    const d = new Date(e.ts);
+    const item = document.createElement("div");
+    item.className = "hist-item";
+    item.innerHTML =
+      `<span class="when">${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}</span>` +
+      `<span class="hname"></span><span class="hurl"></span><button class="gbtn">復元</button>`;
+    item.querySelector(".hname").textContent = e.name;
+    item.querySelector(".hurl").textContent = e.url;
+    item.querySelector("button").addEventListener("click", async () => {
+      $("history-overlay").classList.remove("open");
+      lastCtx = e.ctx;
+      lastScripts = e.scripts;
+      statusEl.textContent = `履歴から復元: 「${e.name}」`;
+      pauseIdle();
+      setStep(4);
+      await Promise.all(["a", "b", "c"].map((t, j) => fillCard(t, e.scripts[t], j * 150, true)));
+      $("copy-all-btn").style.display = "";
+      renderSchedule();
+      resumeIdleSoon();
+    });
+    list.appendChild(item);
+  });
 }
 
 /* ================= generation pipeline ================= */
-const btn = document.getElementById("generate-btn");
-const urlInput = document.getElementById("product-url");
+const btn = $("generate-btn");
+let lastCtx = null;
+let lastScripts = null;
 
 btn.addEventListener("click", async () => {
-  const url = urlInput.value.trim();
-  if (!url) { urlInput.focus(); statusEl.textContent = "PRODUCT URL を入力してください"; return; }
+  const url = $("product-url").value.trim();
+  if (!url) { $("product-url").focus(); statusEl.textContent = "PRODUCT URL を入力してください"; return; }
 
   btn.disabled = true;
   btn.textContent = "生成中...";
-  clearInterval(idleTimer);
-  document.getElementById("schedule").classList.remove("visible");
+  pauseIdle();
+  $("schedule").classList.remove("visible");
+  $("copy-all-btn").style.display = "none";
   document.querySelectorAll(".gen-card").forEach(c => {
     c.classList.remove("filled");
     c.querySelector(".gen-card-body").innerHTML = `<div class="placeholder">STANDBY</div>`;
   });
 
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-  const name = extractProductName(url);
+  const manualName = $("product-name").value.trim();
+  const features = $("product-features").value.trim();
+  const name = manualName || extractProductName(url);
+  const genre = detectGenre(url, name, features);
+  const ctx = { url, name, features, genre };
+  lastCtx = ctx;
 
   setStep(1);
   statusEl.textContent = `商品ページを走査中 ... ${url}`;
   await wait(1200);
 
   setStep(2);
-  statusEl.textContent = `構成を解析中 ... バズ${buzzCount}本の型と照合しています`;
+  const genreLabel = { beauty: "美容", gadget: "ガジェット", health: "健康", food: "グルメ", generic: "汎用" }[genre];
+  statusEl.textContent = `構成を解析中 ... ジャンル判定: ${genreLabel} / バズ${buzzCount}本の型と照合`;
   await wait(1400);
 
   setStep(3);
-  statusEl.textContent = `台本を生成中 ... 「${name}」× 3タイプ同時生成`;
-  const scripts = buildScripts(name);
-  await Promise.all(Object.entries(scripts).map(([id, s], i) => fillCard(id, s, i * 500)));
+  const apiOn = !!localStorage.getItem(API_KEY_STORE);
+  statusEl.textContent = apiOn
+    ? `claude-sonnet-5 で台本を生成中 ... 「${name}」× 3タイプ`
+    : `台本を生成中 ... 「${name}」× 3タイプ同時生成`;
+
+  let scripts = null;
+  if (apiOn) {
+    try { scripts = await generateViaAPI(ctx); }
+    catch (e) { statusEl.textContent = `API生成に失敗(${e.message})→ テンプレート生成に切り替え`; await wait(900); }
+  }
+  if (!scripts) scripts = buildAllScripts(ctx);
+  lastScripts = scripts;
+
+  await Promise.all(["a", "b", "c"].map((t, i) => fillCard(t, scripts[t], i * 500)));
 
   setStep(4);
-  statusEl.textContent = "生成完了 ・ 投稿枠を自動予約しました";
-  document.getElementById("schedule").classList.add("visible");
+  statusEl.textContent = "生成完了 ・ 投稿枠を自動予約しました(↻で1本ずつ作り直せます)";
+  renderSchedule();
+  $("copy-all-btn").style.display = "";
+  saveToHistory({ ts: Date.now(), url, name, ctx, scripts });
 
   btn.disabled = false;
   btn.textContent = "生成開始";
-  setTimeout(() => { idleTimer = setInterval(rotateIdle, 7000); }, 15000);
+  resumeIdleSoon();
 });
 
-async function fillCard(id, script, delay) {
-  const wait = ms => new Promise(r => setTimeout(r, ms));
+async function fillCard(type, script, delay, instant = false) {
   await wait(delay);
-  const card = document.getElementById(id);
+  const card = $("card-" + type);
   const body = card.querySelector(".gen-card-body");
   card.classList.add("filled");
   body.innerHTML = "";
@@ -665,16 +1090,18 @@ async function fillCard(id, script, delay) {
   title.className = "script-line title-line";
   title.textContent = script.title;
   body.appendChild(title);
-  await wait(250);
+  if (!instant) await wait(250);
 
   for (const [tc, role, txt] of script.lines) {
     const div = document.createElement("div");
     div.className = "script-line";
-    div.innerHTML = `<span class="tc">${tc}</span><span class="role">${role}</span> <span class="txt"></span>`;
+    div.innerHTML = `<span class="tc"></span><span class="role"></span> <span class="txt"></span>`;
+    div.querySelector(".tc").textContent = tc;
+    div.querySelector(".role").textContent = role;
     div.querySelector(".txt").textContent = txt;
     body.appendChild(div);
     body.scrollTop = body.scrollHeight;
-    await wait(280);
+    if (!instant) await wait(280);
   }
 
   const tags = document.createElement("div");
@@ -684,17 +1111,38 @@ async function fillCard(id, script, delay) {
   body.scrollTop = body.scrollHeight;
 }
 
-/* ================= copy ================= */
-document.querySelectorAll(".copy-btn").forEach(b => {
+/* per-card regeneration (always template engine — fast local variation) */
+document.querySelectorAll(".regen-btn").forEach(b => {
   b.addEventListener("click", async () => {
-    const body = document.getElementById(b.dataset.card).querySelector(".gen-card-body");
-    const text = [...body.querySelectorAll(".script-line")].map(l => l.textContent.trim()).join("\n");
-    try {
-      await navigator.clipboard.writeText(text);
-      b.textContent = "COPIED";
-      setTimeout(() => (b.textContent = "COPY"), 1500);
-    } catch { b.textContent = "ERROR"; }
+    if (!lastCtx) return;
+    const t = b.dataset.type;
+    const script = buildScript(t, lastCtx);
+    lastScripts[t] = script;
+    await fillCard(t, script, 0);
+    saveToHistory({ ts: Date.now(), url: lastCtx.url, name: lastCtx.name, ctx: lastCtx, scripts: lastScripts });
+    statusEl.textContent = `${t.toUpperCase()}タイプを再生成しました`;
   });
+});
+
+/* ================= copy ================= */
+function cardText(id) {
+  const body = $(id).querySelector(".gen-card-body");
+  return [...body.querySelectorAll(".script-line")].map(l => l.textContent.trim()).join("\n");
+}
+async function copyWithFeedback(btnEl, text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const orig = btnEl.textContent;
+    btnEl.textContent = "COPIED";
+    setTimeout(() => (btnEl.textContent = orig), 1500);
+  } catch { btnEl.textContent = "ERROR"; }
+}
+document.querySelectorAll(".copy-btn").forEach(b =>
+  b.addEventListener("click", () => copyWithFeedback(b, cardText(b.dataset.card))));
+$("copy-all-btn").addEventListener("click", () => {
+  const labels = { "card-a": "【A 問題提起型】", "card-b": "【B ビフォーアフター型】", "card-c": "【C ランキング型】" };
+  const text = Object.keys(labels).map(id => labels[id] + "\n" + cardText(id)).join("\n\n" + "─".repeat(20) + "\n\n");
+  copyWithFeedback($("copy-all-btn"), text);
 });
 </script>
 </body>
