@@ -443,6 +443,70 @@
   .hist-item .hurl { color: var(--amber-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
   .hist-item .gbtn { flex-shrink: 0; }
   .empty-note { color: var(--amber-faint); text-align: center; padding: 20px 0; letter-spacing: 2px; font-size: 10px; }
+  .guide-step {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+    align-items: start;
+  }
+  .guide-step .num {
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--amber);
+    color: #100a03;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .guide-step .head { color: var(--amber-bright); font-weight: 700; margin-bottom: 2px; }
+  .guide-step .desc { color: var(--amber); font-size: 11px; line-height: 1.7; }
+  .guide-step .desc code {
+    font-family: var(--font);
+    color: var(--amber-bright);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    padding: 0 5px;
+    font-size: 10px;
+  }
+  .tips-head {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--amber-dim);
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    margin: 14px 0 8px;
+  }
+  .tips-list { list-style: none; }
+  .tips-list li {
+    position: relative;
+    padding-left: 16px;
+    margin-bottom: 7px;
+    color: var(--amber);
+    font-size: 11px;
+    line-height: 1.7;
+  }
+  .tips-list li::before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: var(--amber-dim);
+  }
+  .tips-list b { color: var(--amber-bright); }
+  #help-start {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    background: var(--amber);
+    color: #100a03;
+    border: none;
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 3px;
+    padding: 10px;
+    cursor: pointer;
+  }
+  #help-start:hover { background: var(--amber-bright); box-shadow: 0 0 14px rgba(255, 196, 86, 0.45); }
   .settings-note { color: var(--amber-dim); font-size: 10px; margin-top: 10px; line-height: 1.7; }
   .settings-note b { color: var(--amber-bright); }
   .modal-actions { display: flex; gap: 8px; margin-top: 12px; }
@@ -493,6 +557,7 @@
     <div class="step" data-step="3">03 生成</div>
     <div class="step" data-step="4">04 予約</div>
   </nav>
+  <button class="hbtn" id="help-btn">? 使い方</button>
   <button class="hbtn" id="history-btn">HISTORY</button>
   <button class="hbtn" id="settings-btn">API ⚙</button>
   <div class="badge">SYSTEM ONLINE</div>
@@ -575,6 +640,53 @@
   </div>
 </div>
 
+<!-- ===== HELP OVERLAY ===== -->
+<div class="overlay" id="help-overlay">
+  <div class="modal">
+    <div class="panel-title">GUIDE <span class="jp">使い方</span><button class="close" data-close="help-overlay">✕</button></div>
+    <div class="modal-body">
+      <div class="guide-step">
+        <span class="num">1</span>
+        <div>
+          <div class="head">商品URLを入力</div>
+          <div class="desc">紹介したい商品ページのURLを <code>PRODUCT URL</code> に貼り付け。お試しなら <code>https://example-shop.com/products/mirai-serum</code> でもOK。</div>
+        </div>
+      </div>
+      <div class="guide-step">
+        <span class="num">2</span>
+        <div>
+          <div class="head">「生成開始」を押す</div>
+          <div class="desc">走査→解析→生成と自動で進み、縦型ショート用の台本が3タイプ同時に完成します(A 問題提起型 / B ビフォーアフター型 / C ランキング型)。</div>
+        </div>
+      </div>
+      <div class="guide-step">
+        <span class="num">3</span>
+        <div>
+          <div class="head">コピーして撮影に使う</div>
+          <div class="desc">各カードの <code>COPY</code>、または <code>3本まとめてコピー</code>。秒数タイムコード付きなので、そのまま撮影台本・テロップ案として使えます。</div>
+        </div>
+      </div>
+      <div class="guide-step">
+        <span class="num">4</span>
+        <div>
+          <div class="head">気に入らなければ作り直す</div>
+          <div class="desc"><code>↻ 再生成</code> を押すたびに別パターンの台本が出ます。1タイプだけの作り直しもOK。</div>
+        </div>
+      </div>
+      <div class="tips-head">TIPS もっと便利に</div>
+      <ul class="tips-list">
+        <li><b>精度を上げる:</b> URL欄の下「▸ 商品名・特徴を手動入力」に商品名と推しポイントを入れると、台本にそのまま反映されます(URLからの推定より優先)。</li>
+        <li><b>ジャンル自動判定:</b> URLや商品名から美容/ガジェット/健康/グルメを判定し、悩み・ベネフィットの語彙が切り替わります。</li>
+        <li><b>履歴:</b> 生成結果は自動で保存(直近10件)。<b>HISTORY</b> からいつでも復元できます。</li>
+        <li><b>投稿予約:</b> 生成後に表示される予約枠は、現在時刻から次のゴールデンタイム(7時/12時/19時/21時)を自動で割り当てています。</li>
+        <li><b>AI生成モード:</b> <b>API ⚙</b> にAnthropic APIキーを設定すると、本物のAIによる台本生成に切り替わります(ローカルで開いた場合のみ。未設定でも内蔵テンプレートで動きます)。</li>
+        <li><b>スマホの方:</b> RESEARCHのタイトルをタップすると走査ログが展開されます。</li>
+      </ul>
+      <button id="help-start">はじめる</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== SETTINGS OVERLAY ===== -->
 <div class="overlay" id="settings-overlay">
   <div class="modal">
@@ -602,7 +714,7 @@
 <footer>
   <span class="cursor">▶</span>
   <span id="status-text">システム初期化中...</span>
-  <span class="version">SHORTS FACTORY OS v1.1.0</span>
+  <span class="version">SHORTS FACTORY OS v1.2.0</span>
 </footer>
 
 <script>
@@ -924,6 +1036,15 @@ document.querySelectorAll(".close").forEach(b =>
   b.addEventListener("click", () => $(b.dataset.close).classList.remove("open")));
 document.querySelectorAll(".overlay").forEach(o =>
   o.addEventListener("click", e => { if (e.target === o) o.classList.remove("open"); }));
+
+/* help modal: button + first-visit auto open */
+const HELP_SEEN = "sf_help_seen";
+$("help-btn").addEventListener("click", () => openOverlay("help-overlay"));
+$("help-start").addEventListener("click", () => $("help-overlay").classList.remove("open"));
+if (!localStorage.getItem(HELP_SEEN)) {
+  localStorage.setItem(HELP_SEEN, "1");
+  openOverlay("help-overlay");
+}
 
 $("settings-btn").addEventListener("click", () => {
   $("api-key-input").value = localStorage.getItem(API_KEY_STORE) || "";
