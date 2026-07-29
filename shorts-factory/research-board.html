@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESEARCH BOARD — アフィ商品リサーチボード</title>
+<style>
+  :root {
+    --bg: #0a0702; --panel: #140e04; --panel-2: #1a1206;
+    --line: rgba(240, 170, 60, 0.28); --line-strong: rgba(240, 170, 60, 0.55);
+    --amber: #e8a33d; --amber-bright: #ffc456; --amber-dim: #96712f; --amber-faint: #5c4620;
+    --green: #7dd87d;
+    --font: "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--amber); font-family: var(--font); font-size: 13px;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 1px, transparent 3px);
+    z-index: 999;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px; padding: 12px 18px;
+    border-bottom: 1px solid var(--line); background: linear-gradient(180deg, #191106, #100a03); flex-wrap: wrap;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: 3px;
+    color: var(--amber-bright); text-shadow: 0 0 12px rgba(255,196,86,0.35); white-space: nowrap;
+  }
+  .logo::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--amber-bright); box-shadow: 0 0 10px var(--amber-bright); }
+  .subtitle { color: var(--amber-dim); font-size: 11px; letter-spacing: 2px; border-left: 1px solid var(--line); padding-left: 16px; }
+  .hbtn {
+    margin-left: auto; background: none; border: 1px solid var(--line); color: var(--amber-dim);
+    font-family: var(--font); font-size: 10px; letter-spacing: 2px; padding: 4px 12px; cursor: pointer;
+    text-decoration: none; white-space: nowrap;
+  }
+  .hbtn:hover { color: var(--amber-bright); border-color: var(--line-strong); }
+  main { flex: 1; padding: 14px 18px; display: flex; flex-direction: column; gap: 14px; max-width: 1100px; width: 100%; margin: 0 auto; }
+  .panel { background: var(--panel); border: 1px solid var(--line); }
+  .panel-title {
+    padding: 10px 14px; font-size: 11px; letter-spacing: 2px; color: var(--amber-bright);
+    border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .panel-title::before { content: "■"; font-size: 8px; }
+  .panel-title .jp { color: var(--amber-dim); letter-spacing: 1px; }
+  .form-row { display: flex; gap: 10px; padding: 12px 14px; flex-wrap: wrap; }
+  .tinput, select.tinput {
+    background: #0c0803; border: 1px solid var(--line-strong); color: var(--amber-bright);
+    font-family: var(--font); font-size: 12px; padding: 7px 10px; outline: none;
+  }
+  .tinput:focus { box-shadow: 0 0 12px rgba(240,170,60,0.25); }
+  .tinput::placeholder { color: var(--amber-faint); }
+  #f-url { flex: 2; min-width: 200px; }
+  #f-name { flex: 1; min-width: 130px; }
+  #f-genre, #f-fit { flex: 0 1 130px; }
+  #f-price { flex: 0 1 120px; }
+  #f-memo { flex: 1.5; min-width: 140px; }
+  #add-btn {
+    background: var(--amber); color: #100a03; border: none; font-family: var(--font); font-weight: 700;
+    font-size: 12px; letter-spacing: 2px; padding: 8px 20px; cursor: pointer;
+  }
+  #add-btn:hover { background: var(--amber-bright); box-shadow: 0 0 14px rgba(255,196,86,0.45); }
+  .gbtn {
+    background: none; border: 1px solid var(--line); color: var(--amber-dim); font-family: var(--font);
+    font-size: 9px; letter-spacing: 1px; padding: 3px 10px; cursor: pointer; text-decoration: none; display: inline-block;
+  }
+  .gbtn:hover { color: var(--amber-bright); border-color: var(--line-strong); }
+  .gbtn.danger:hover { color: #d24a3e; border-color: #d24a3e; }
+  .table-wrap { overflow-x: auto; padding: 0 14px 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 760px; }
+  th {
+    text-align: left; color: var(--amber-dim); font-size: 9px; letter-spacing: 2px;
+    padding: 10px 8px; border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  th.sortable { cursor: pointer; }
+  th.sortable:hover { color: var(--amber-bright); }
+  th .arrow { color: var(--amber-bright); }
+  td { padding: 8px; border-bottom: 1px dashed var(--line); vertical-align: middle; }
+  td.name { color: var(--amber-bright); font-weight: 700; white-space: nowrap; }
+  td.url a { color: var(--amber-dim); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+  td.url a:hover { color: var(--amber-bright); }
+  td.price { text-align: right; color: var(--green); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.fit { color: var(--amber-bright); letter-spacing: 1px; white-space: nowrap; }
+  td.genre span { border: 1px solid var(--line-strong); font-size: 9px; padding: 1px 7px; color: var(--amber-dim); }
+  td.memo { color: var(--amber-dim); font-size: 10px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.actions { white-space: nowrap; text-align: right; }
+  .empty-note { color: var(--amber-faint); text-align: center; padding: 40px 0; letter-spacing: 2px; font-size: 10px; }
+  .summary { margin-left: auto; font-size: 10px; color: var(--amber-dim); letter-spacing: 1px; }
+  .summary b { color: var(--amber-bright); }
+  .note { padding: 8px 14px; font-size: 10px; color: var(--amber-faint); border-top: 1px solid var(--line); line-height: 1.7; }
+  footer {
+    display: flex; align-items: center; gap: 14px; padding: 8px 18px; border-top: 1px solid var(--line);
+    background: #100a03; font-size: 11px;
+  }
+  footer .cursor { color: var(--amber-bright); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  footer .version { margin-left: auto; color: var(--amber-faint); letter-spacing: 2px; font-size: 9px; }
+  @media (max-width: 700px) { .subtitle { display: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">RESEARCH BOARD</div>
+  <div class="subtitle">アフィ商品リサーチボード — 走査の上流工程</div>
+  <a class="hbtn" href="./index.html">← SHORTS FACTORY</a>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="panel-title">ADD <span class="jp">候補商品を登録</span></div>
+    <div class="form-row">
+      <input id="f-url" class="tinput" type="url" placeholder="商品URL (必須)" spellcheck="false">
+      <input id="f-name" class="tinput" type="text" placeholder="商品名" spellcheck="false">
+      <select id="f-genre" class="tinput">
+        <option value="美容">美容</option><option value="ガジェット">ガジェット</option>
+        <option value="健康">健康</option><option value="グルメ">グルメ</option><option value="その他">その他</option>
+      </select>
+      <input id="f-price" class="tinput" type="number" min="0" placeholder="報酬単価(円)">
+      <select id="f-fit" class="tinput">
+        <option value="5">適性 ★★★★★</option><option value="4">適性 ★★★★</option>
+        <option value="3" selected>適性 ★★★</option><option value="2">適性 ★★</option><option value="1">適性 ★</option>
+      </select>
+      <input id="f-memo" class="tinput" type="text" placeholder="メモ(訴求ポイント等)" spellcheck="false">
+      <button id="add-btn">追加</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-title">BOARD <span class="jp">クリックで並び替え</span><span class="summary" id="summary"></span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>商品</th><th>URL</th><th>ジャンル</th>
+          <th class="sortable" data-key="price">単価 <span class="arrow" data-a="price"></span></th>
+          <th class="sortable" data-key="fit">ショート適性 <span class="arrow" data-a="fit"></span></th>
+          <th>メモ</th>
+          <th class="sortable" data-key="ts">追加日 <span class="arrow" data-a="ts"></span></th>
+          <th></th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty-note" id="empty" style="display:none">NO ITEMS — 商品URLを登録するとここに貯まります</div>
+    </div>
+    <div class="note">「台本を作る」を押すと SHORTS FACTORY にURL・商品名を引き継いで開きます。リサーチ→台本→予約が一気通貫になります。データはこの端末(localStorage)に保存されます。</div>
+  </section>
+</main>
+
+<footer>
+  <span class="cursor">▶</span>
+  <span id="status">リサーチボード稼働中</span>
+  <span class="version">RESEARCH BOARD v1.0 · SHORTS FACTORY SUITE</span>
+</footer>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const STORE = "sf_board";
+const pad = n => String(n).padStart(2, "0");
+
+let items = [];
+try { items = JSON.parse(localStorage.getItem(STORE)) || []; } catch { items = []; }
+let sortKey = "ts", sortDesc = true;
+
+function save() { localStorage.setItem(STORE, JSON.stringify(items)); }
+
+function render() {
+  const tbody = $("rows");
+  tbody.innerHTML = "";
+  const sorted = [...items].sort((a, b) => (sortDesc ? -1 : 1) * ((a[sortKey] || 0) - (b[sortKey] || 0)));
+  sorted.forEach(it => {
+    const tr = document.createElement("tr");
+    const d = new Date(it.ts);
+    tr.innerHTML =
+      `<td class="name"></td><td class="url"><a target="_blank" rel="noopener"></a></td>` +
+      `<td class="genre"><span></span></td><td class="price"></td><td class="fit"></td><td class="memo"></td>` +
+      `<td>${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}</td>` +
+      `<td class="actions"><a class="gbtn make-btn">台本を作る</a> <button class="gbtn danger del-btn">削除</button></td>`;
+    tr.querySelector(".name").textContent = it.name || "(無名)";
+    const a = tr.querySelector(".url a");
+    a.href = it.url; a.textContent = it.url;
+    tr.querySelector(".genre span").textContent = it.genre;
+    tr.querySelector(".price").textContent = it.price ? Number(it.price).toLocaleString() + "円" : "—";
+    tr.querySelector(".fit").textContent = "★".repeat(it.fit) + "☆".repeat(5 - it.fit);
+    tr.querySelector(".memo").textContent = it.memo || "";
+    tr.querySelector(".make-btn").href =
+      "./index.html?url=" + encodeURIComponent(it.url) + (it.name ? "&name=" + encodeURIComponent(it.name) : "");
+    tr.querySelector(".del-btn").addEventListener("click", () => {
+      items = items.filter(x => x.ts !== it.ts);
+      save(); render();
+    });
+    tbody.appendChild(tr);
+  });
+  $("empty").style.display = items.length ? "none" : "";
+  const avg = items.length ? Math.round(items.reduce((s, x) => s + (Number(x.price) || 0), 0) / items.length) : 0;
+  $("summary").innerHTML = `<b>${items.length}</b>件 ・ 平均単価 <b>${avg.toLocaleString()}</b>円`;
+  document.querySelectorAll(".arrow").forEach(el =>
+    el.textContent = el.dataset.a === sortKey ? (sortDesc ? "▼" : "▲") : "");
+}
+
+$("add-btn").addEventListener("click", () => {
+  const url = $("f-url").value.trim();
+  if (!url) { $("f-url").focus(); $("status").textContent = "商品URLは必須です"; return; }
+  items.unshift({
+    ts: Date.now(),
+    url,
+    name: $("f-name").value.trim(),
+    genre: $("f-genre").value,
+    price: Number($("f-price").value) || 0,
+    fit: Number($("f-fit").value),
+    memo: $("f-memo").value.trim(),
+  });
+  save();
+  ["f-url", "f-name", "f-price", "f-memo"].forEach(id => $(id).value = "");
+  $("status").textContent = "登録しました";
+  render();
+});
+
+document.querySelectorAll("th.sortable").forEach(th =>
+  th.addEventListener("click", () => {
+    const k = th.dataset.key;
+    if (sortKey === k) sortDesc = !sortDesc; else { sortKey = k; sortDesc = true; }
+    render();
+  }));
+
+render();
+</script>
+</body>
+</html>

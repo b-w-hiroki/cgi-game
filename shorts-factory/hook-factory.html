@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOOK FACTORY — 冒頭2秒フック文ジェネレーター</title>
+<style>
+  :root {
+    --bg: #0a0702; --panel: #140e04; --panel-2: #1a1206;
+    --line: rgba(240, 170, 60, 0.28); --line-strong: rgba(240, 170, 60, 0.55);
+    --amber: #e8a33d; --amber-bright: #ffc456; --amber-dim: #96712f; --amber-faint: #5c4620;
+    --green: #7dd87d;
+    --font: "SF Mono", "JetBrains Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--amber); font-family: var(--font); font-size: 13px;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 1px, transparent 3px);
+    z-index: 999;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px; padding: 12px 18px;
+    border-bottom: 1px solid var(--line); background: linear-gradient(180deg, #191106, #100a03); flex-wrap: wrap;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; letter-spacing: 3px;
+    color: var(--amber-bright); text-shadow: 0 0 12px rgba(255,196,86,0.35); white-space: nowrap;
+  }
+  .logo::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--amber-bright); box-shadow: 0 0 10px var(--amber-bright); }
+  .subtitle { color: var(--amber-dim); font-size: 11px; letter-spacing: 2px; border-left: 1px solid var(--line); padding-left: 16px; }
+  .hbtn {
+    margin-left: auto; background: none; border: 1px solid var(--line); color: var(--amber-dim);
+    font-family: var(--font); font-size: 10px; letter-spacing: 2px; padding: 4px 12px; cursor: pointer;
+    text-decoration: none; white-space: nowrap;
+  }
+  .hbtn:hover { color: var(--amber-bright); border-color: var(--line-strong); }
+  main { flex: 1; padding: 14px 18px; display: flex; flex-direction: column; gap: 14px; max-width: 900px; width: 100%; margin: 0 auto; }
+  .panel { background: var(--panel); border: 1px solid var(--line); }
+  .panel-title {
+    padding: 10px 14px; font-size: 11px; letter-spacing: 2px; color: var(--amber-bright);
+    border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px;
+  }
+  .panel-title::before { content: "■"; font-size: 8px; }
+  .panel-title .jp { color: var(--amber-dim); letter-spacing: 1px; }
+  .form-row { display: flex; gap: 12px; padding: 12px 14px; flex-wrap: wrap; align-items: center; }
+  .form-row label { font-size: 11px; letter-spacing: 2px; color: var(--amber-dim); white-space: nowrap; }
+  .tinput, select.tinput {
+    flex: 1; min-width: 160px; background: #0c0803; border: 1px solid var(--line-strong);
+    color: var(--amber-bright); font-family: var(--font); font-size: 13px; padding: 8px 12px; outline: none;
+  }
+  .tinput:focus { box-shadow: 0 0 12px rgba(240,170,60,0.25); }
+  .tinput::placeholder { color: var(--amber-faint); }
+  #gen-btn {
+    background: var(--amber); color: #100a03; border: none; font-family: var(--font); font-weight: 700;
+    font-size: 12px; letter-spacing: 2px; padding: 9px 22px; cursor: pointer; white-space: nowrap;
+  }
+  #gen-btn:hover { background: var(--amber-bright); box-shadow: 0 0 14px rgba(255,196,86,0.45); }
+  .gbtn {
+    background: none; border: 1px solid var(--line); color: var(--amber-dim); font-family: var(--font);
+    font-size: 9px; letter-spacing: 1px; padding: 3px 10px; cursor: pointer;
+  }
+  .gbtn:hover { color: var(--amber-bright); border-color: var(--line-strong); }
+  #results { flex: 1; }
+  #hook-list { padding: 10px 14px; }
+  .hook-row {
+    display: grid; grid-template-columns: 34px 44px 1fr auto; gap: 10px; align-items: center;
+    border: 1px solid var(--line); padding: 8px 10px; margin-bottom: 7px;
+    opacity: 0; animation: fadein 0.3s forwards;
+  }
+  @keyframes fadein { to { opacity: 1; } }
+  .hook-row .rank {
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .rank.S { background: var(--amber-bright); color: #100a03; box-shadow: 0 0 10px rgba(255,196,86,0.5); }
+  .rank.A { background: var(--amber-dim); color: #100a03; }
+  .rank.B { border: 1px solid var(--line-strong); color: var(--amber-dim); }
+  .hook-row .score { font-size: 10px; color: var(--amber-faint); text-align: right; }
+  .hook-row .txt { color: var(--amber-bright); font-size: 13px; line-height: 1.5; }
+  .empty-note { color: var(--amber-faint); text-align: center; padding: 40px 0; letter-spacing: 2px; font-size: 10px; }
+  .note { padding: 8px 14px; font-size: 10px; color: var(--amber-faint); border-top: 1px solid var(--line); line-height: 1.7; }
+  footer {
+    display: flex; align-items: center; gap: 14px; padding: 8px 18px; border-top: 1px solid var(--line);
+    background: #100a03; font-size: 11px;
+  }
+  footer .cursor { color: var(--amber-bright); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  footer .version { margin-left: auto; color: var(--amber-faint); letter-spacing: 2px; font-size: 9px; }
+  @media (max-width: 700px) { .hook-row { grid-template-columns: 30px 1fr auto; } .hook-row .score { display: none; } .subtitle { display: none; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">HOOK FACTORY</div>
+  <div class="subtitle">冒頭2秒・フック文ジェネレーター</div>
+  <a class="hbtn" href="./index.html">← SHORTS FACTORY</a>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="panel-title">INPUT <span class="jp">テーマを入れて20本生成</span></div>
+    <div class="form-row">
+      <label for="subject">テーマ/商品</label>
+      <input id="subject" class="tinput" type="text" placeholder="例: ミライ美容液、時短ガジェット、宅トレ" spellcheck="false">
+      <select id="genre" class="tinput" style="flex:0 1 160px">
+        <option value="auto">ジャンル: 自動判定</option>
+        <option value="beauty">美容</option>
+        <option value="gadget">ガジェット</option>
+        <option value="health">健康・ダイエット</option>
+        <option value="food">グルメ</option>
+        <option value="generic">汎用</option>
+      </select>
+      <button id="gen-btn">フック20本生成</button>
+    </div>
+  </section>
+
+  <section class="panel" id="results">
+    <div class="panel-title">RESULTS <span class="jp">強い順(S/A/B)</span>
+      <button class="gbtn" id="copy-all" style="margin-left:auto;display:none">全部コピー</button>
+    </div>
+    <div id="hook-list"><div class="empty-note">STANDBY — テーマを入れて生成してください</div></div>
+    <div class="note">スコアは「数字あり/疑問形/損失回避ワード/20文字以内/呼びかけ」のヒューリスティック採点です。Sランクから順に試し、伸びたパターンを次回のベースにするのがおすすめ。</div>
+  </section>
+</main>
+
+<footer>
+  <span class="cursor">▶</span>
+  <span id="status">バズフックの型 16パターンを搭載</span>
+  <span class="version">HOOK FACTORY v1.0 · SHORTS FACTORY SUITE</span>
+</footer>
+
+<script>
+"use strict";
+const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pick = arr => arr[rand(0, arr.length - 1)];
+const $ = id => document.getElementById(id);
+
+const GENRES = {
+  beauty:  { re: /(美容|コスメ|スキンケア|化粧|serum|cosme|beauty|肌|髪)/i,
+             pain: ["肌のゆらぎ", "毛穴の目立ち", "乾燥くすみ", "メイクノリの悪さ"],
+             gain: ["すっぴんに自信が持てる", "鏡を見るのが楽しくなる", "垢抜ける"] },
+  gadget:  { re: /(ガジェット|家電|充電|デスク|pc|キーボード|イヤホン|tech)/i,
+             pain: ["毎日の細かいストレス", "作業効率の頭打ち", "散らかったデスク"],
+             gain: ["作業時間が減る", "デスクが垢抜ける", "QOLが上がる"] },
+  health:  { re: /(ダイエット|サプリ|睡眠|筋トレ|痩せ|健康|トレ)/i,
+             pain: ["続かない習慣", "落ちない体重", "朝のだるさ"],
+             gain: ["体が軽くなる", "服のサイズが変わる", "朝スッと起きられる"] },
+  food:    { re: /(グルメ|コーヒー|お取り寄せ|レシピ|ごはん|スイーツ|食)/i,
+             pain: ["マンネリな食卓", "自炊する時間のなさ", "コンビニ飯の罪悪感"],
+             gain: ["家がいい店になる", "5分で大満足の一食になる", "手土産で外さない"] },
+  generic: { re: /$^/,
+             pain: ["毎日の地味な悩み", "なんとなくの不便", "時間とお金のムダ"],
+             gain: ["生活の質が一段上がる", "使う前に戻れなくなる", "人に勧めたくなる"] },
+};
+function detectGenre(s) {
+  for (const [k, g] of Object.entries(GENRES)) if (k !== "generic" && g.re.test(s)) return k;
+  return "generic";
+}
+
+/* フックの型: subject(商品/テーマ), pain, gain を差し込む */
+const PATTERNS = [
+  (s, p, g) => `え、まだ${p}で消耗してるの?`,
+  (s, p, g) => `${s}、9割の人が使い方間違えてます。`,
+  (s, p, g) => `【閲覧注意】${p}を放置した結果…`,
+  (s, p, g) => `たった7日で${g}方法、教えます。`,
+  (s, p, g) => `${s}を買う前に、これだけは見て。`,
+  (s, p, g) => `正直、${s}ナメてました。`,
+  (s, p, g) => `${p}な人、この10秒だけください。`,
+  (s, p, g) => `知らないと損する${s}の話。`,
+  (s, p, g) => `左が1ヶ月前の私。右が今。`,
+  (s, p, g) => `1000円台で${g}って知ってた?`,
+  (s, p, g) => `${s}歴3年の私が、最初に戻れるならこれを買う。`,
+  (s, p, g) => `全部試した結果、残ったのは${s}だけでした。`,
+  (s, p, g) => `${s}で失敗する人の共通点、言います。`,
+  (s, p, g) => `コメントで一番聞かれる${s}の件、答えます。`,
+  (s, p, g) => `もう${p}に悩まない。答えはこれ。`,
+  (s, p, g) => `※${s}を検討中の人以外はスルーしてください。`,
+];
+
+function scoreHook(t) {
+  let sc = 50;
+  if (/[0-9０-９]/.test(t)) sc += 12;
+  if (/[??]/.test(t)) sc += 8;
+  if (/(損|失敗|注意|放置|ナメ|スルー)/.test(t)) sc += 12;
+  if (t.length <= 20) sc += 10;
+  if (/(あなた|人、|ください|見て|知ってた)/.test(t)) sc += 6;
+  return Math.min(99, sc + rand(0, 14));
+}
+const rankOf = sc => sc >= 85 ? "S" : sc >= 70 ? "A" : "B";
+
+let lastHooks = [];
+$("gen-btn").addEventListener("click", () => {
+  const subject = $("subject").value.trim();
+  if (!subject) { $("subject").focus(); $("status").textContent = "テーマ/商品を入力してください"; return; }
+  const genreSel = $("genre").value;
+  const genre = genreSel === "auto" ? detectGenre(subject) : genreSel;
+  const v = GENRES[genre];
+
+  const seen = new Set();
+  const hooks = [];
+  let guard = 0;
+  while (hooks.length < 20 && guard++ < 200) {
+    const t = pick(PATTERNS)(subject, pick(v.pain), pick(v.gain));
+    if (seen.has(t)) continue;
+    seen.add(t);
+    hooks.push({ t, sc: scoreHook(t) });
+  }
+  hooks.sort((a, b) => b.sc - a.sc);
+  lastHooks = hooks;
+
+  const list = $("hook-list");
+  list.innerHTML = "";
+  hooks.forEach((h, i) => {
+    const row = document.createElement("div");
+    row.className = "hook-row";
+    row.style.animationDelay = (i * 60) + "ms";
+    const r = rankOf(h.sc);
+    row.innerHTML = `<span class="rank ${r}">${r}</span><span class="score">${h.sc}pt</span><span class="txt"></span><button class="gbtn">COPY</button>`;
+    row.querySelector(".txt").textContent = h.t;
+    row.querySelector("button").addEventListener("click", async e => {
+      try { await navigator.clipboard.writeText(h.t); e.target.textContent = "COPIED"; setTimeout(() => e.target.textContent = "COPY", 1200); }
+      catch { e.target.textContent = "ERROR"; }
+    });
+    list.appendChild(row);
+  });
+  $("copy-all").style.display = "";
+  $("status").textContent = `「${subject}」× ${ {beauty:"美容",gadget:"ガジェット",health:"健康",food:"グルメ",generic:"汎用"}[genre] } で20本生成しました`;
+});
+
+$("copy-all").addEventListener("click", async e => {
+  const text = lastHooks.map((h, i) => `${i + 1}. [${rankOf(h.sc)}] ${h.t}`).join("\n");
+  try { await navigator.clipboard.writeText(text); e.target.textContent = "COPIED"; setTimeout(() => e.target.textContent = "全部コピー", 1200); }
+  catch { e.target.textContent = "ERROR"; }
+});
+
+$("subject").addEventListener("keydown", e => { if (e.key === "Enter") $("gen-btn").click(); });
+</script>
+</body>
+</html>
