@@ -303,6 +303,27 @@
   #detail-row .field { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px; }
   #detail-row .field span { font-size: 9px; letter-spacing: 2px; color: var(--amber-faint); }
 
+  .seg {
+    display: flex;
+    border: 1px solid var(--line);
+  }
+  .seg button {
+    background: none;
+    border: none;
+    color: var(--amber-dim);
+    font-family: var(--font);
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  .seg button.on {
+    background: var(--amber);
+    color: #100a03;
+    font-weight: 700;
+  }
+  header .tool-link { text-decoration: none; }
+
   #generator { flex: 1; }
   #generator .panel-title .gbtn { margin-left: auto; }
   .gbtn {
@@ -511,6 +532,22 @@
   .settings-note b { color: var(--amber-bright); }
   .modal-actions { display: flex; gap: 8px; margin-top: 12px; }
 
+  /* ============ PRINT SHEET (撮影指示書) ============ */
+  #print-sheet { display: none; }
+  @media print {
+    body > header, body > main, body > footer, .overlay, body::after { display: none !important; }
+    body { overflow: visible; background: #fff; color: #000; display: block; }
+    #print-sheet { display: block; font-family: var(--font); color: #000; }
+    #print-sheet h1 { font-size: 16px; margin-bottom: 2px; }
+    #print-sheet .meta { font-size: 10px; color: #444; margin-bottom: 14px; }
+    #print-sheet h2 { font-size: 13px; margin: 14px 0 6px; border-left: 4px solid #000; padding-left: 8px; page-break-after: avoid; }
+    #print-sheet table { width: 100%; border-collapse: collapse; font-size: 10px; page-break-inside: avoid; }
+    #print-sheet th, #print-sheet td { border: 1px solid #000; padding: 5px 6px; text-align: left; vertical-align: top; }
+    #print-sheet th { background: #eee; font-size: 9px; letter-spacing: 1px; }
+    #print-sheet td.blank { min-width: 90px; }
+    #print-sheet .tagline { font-size: 10px; color: #444; margin-top: 4px; }
+  }
+
   /* ============ STATUS BAR ============ */
   footer {
     display: flex;
@@ -557,6 +594,9 @@
     <div class="step" data-step="3">03 生成</div>
     <div class="step" data-step="4">04 予約</div>
   </nav>
+  <a class="hbtn tool-link" href="./hook-factory.html" title="フック文ジェネレーター">HOOK</a>
+  <a class="hbtn tool-link" href="./reply-factory.html" title="コメント返信工場">REPLY</a>
+  <a class="hbtn tool-link" href="./research-board.html" title="アフィ商品リサーチボード">BOARD</a>
   <button class="hbtn" id="help-btn">? 使い方</button>
   <button class="hbtn" id="history-btn">HISTORY</button>
   <button class="hbtn" id="settings-btn">API ⚙</button>
@@ -588,6 +628,11 @@
       <div class="url-bar">
         <label for="product-url">PRODUCT URL</label>
         <input id="product-url" class="tinput" type="url" placeholder="https://example.com/products/your-item" spellcheck="false">
+        <span class="seg" id="duration-seg">
+          <button data-dur="15">15秒</button>
+          <button data-dur="30">30秒</button>
+          <button data-dur="55" class="on">55秒</button>
+        </span>
         <button id="generate-btn">生成開始</button>
       </div>
       <button id="detail-toggle">▸ 商品名・特徴を手動入力(任意)</button>
@@ -680,6 +725,10 @@
         <li><b>履歴:</b> 生成結果は自動で保存(直近10件)。<b>HISTORY</b> からいつでも復元できます。</li>
         <li><b>投稿予約:</b> 生成後に表示される予約枠は、現在時刻から次のゴールデンタイム(7時/12時/19時/21時)を自動で割り当てています。</li>
         <li><b>AI生成モード:</b> <b>API ⚙</b> にAnthropic APIキーを設定すると、本物のAIによる台本生成に切り替わります(ローカルで開いた場合のみ。未設定でも内蔵テンプレートで動きます)。</li>
+        <li><b>尺の切り替え:</b> URL欄の横で15秒/30秒/55秒を選べます。15秒は「フック→核心→CTA」まで自動圧縮。</li>
+        <li><b>CTAは2案(A/B)出ます:</b> 反応の良い方を次回に使うと伸びが安定します。</li>
+        <li><b>生成後にできること:</b> 「📅 予約を.icsで保存」でカレンダーに投稿予定を登録、「🖨 撮影指示書」でカット割り・素材メモ欄付きの印刷用シート(PDF保存可)を出力。</li>
+        <li><b>連携ツール:</b> ヘッダーの <b>HOOK</b>(フック文20本生成)/<b>REPLY</b>(コメント返信案)/<b>BOARD</b>(商品リサーチ管理)も使えます。BOARDの「台本を作る」からここに商品情報を引き継げます。</li>
         <li><b>スマホの方:</b> RESEARCHのタイトルをタップすると走査ログが展開されます。</li>
       </ul>
       <button id="help-start">はじめる</button>
@@ -702,19 +751,29 @@
         <b>注意:</b> キーはこの端末のブラウザ(localStorage)にのみ保存され、外部には送信されません(Anthropic APIへの直接リクエストを除く)。
         共有PCでは設定しないでください。
       </div>
+      <div class="field" style="margin-top:14px">
+        <span style="font-size:9px;letter-spacing:2px;color:var(--amber-faint)">PAGE PROXY URL(任意) — 商品ページ本文をAPI生成に渡すCORSプロキシ</span>
+        <input id="proxy-input" class="tinput" type="url" placeholder="https://your-worker.example.workers.dev/?url=" spellcheck="false" style="width:100%">
+      </div>
+      <div class="field" style="margin-top:14px">
+        <span style="font-size:9px;letter-spacing:2px;color:var(--amber-faint)">YOUTUBE DATA API KEY(任意) — 左のバズ走査を実データ化</span>
+        <input id="yt-key-input" class="tinput" type="password" placeholder="AIza..." spellcheck="false" style="width:100%">
+      </div>
       <div class="modal-actions">
         <button class="gbtn" id="api-key-save">保存</button>
-        <button class="gbtn" id="api-key-clear">削除</button>
+        <button class="gbtn" id="api-key-clear">全削除</button>
         <span id="api-key-status" style="font-size:10px;color:var(--amber-dim);align-self:center"></span>
       </div>
     </div>
   </div>
 </div>
 
+<div id="print-sheet"></div>
+
 <footer>
   <span class="cursor">▶</span>
   <span id="status-text">システム初期化中...</span>
-  <span class="version">SHORTS FACTORY OS v1.2.0</span>
+  <span class="version">SHORTS FACTORY OS v1.3.0</span>
 </footer>
 
 <script>
@@ -772,11 +831,22 @@ const feedMsgs = [
   ["tk", "TIKTOK",  "コメント熱量", "スコア化"],
 ];
 const fmtViews = () => Math.random() < 0.5 ? (rand(11, 38) / 10).toFixed(1) + "M" : rand(120, 990) + "K";
+let realTitles = []; // YouTube Data APIキー設定時のみ実データが入る
 function addFeedLine() {
-  const [cls, src, act, tail] = pick(feedMsgs);
   const now = jstNow();
   const line = document.createElement("div");
   line.className = "feed-line";
+  if (realTitles.length && Math.random() < 0.4) {
+    const t = pick(realTitles);
+    line.innerHTML =
+      `<span class="t">${pad(now.getHours())}:${pad(now.getMinutes())}</span><span class="src yt">YOUTUBE</span>` +
+      `<span class="msg">実走査 <b></b></span>`;
+    line.querySelector("b").textContent = `「${t.slice(0, 16)}…」`;
+    feedEl.appendChild(line);
+    while (feedEl.children.length > 14) feedEl.removeChild(feedEl.firstChild);
+    return;
+  }
+  const [cls, src, act, tail] = pick(feedMsgs);
   line.innerHTML =
     `<span class="t">${pad(now.getHours())}:${pad(now.getMinutes())}</span><span class="src ${cls}">${src}</span>` +
     `<span class="msg">${act} <b>${fmtViews()}</b> ${tail}</span>`;
@@ -827,6 +897,25 @@ $("detail-toggle").addEventListener("click", () => {
   $("detail-toggle").textContent = (row.classList.contains("open") ? "▾" : "▸") + " 商品名・特徴を手動入力(任意)";
 });
 
+/* duration segmented control */
+let duration = 55;
+document.querySelectorAll("#duration-seg button").forEach(b =>
+  b.addEventListener("click", () => {
+    duration = Number(b.dataset.dur);
+    document.querySelectorAll("#duration-seg button").forEach(x => x.classList.toggle("on", x === b));
+  }));
+
+/* prefill from query params (リサーチボード連携: ?url=...&name=...) */
+{
+  const qp = new URLSearchParams(location.search);
+  if (qp.get("url")) $("product-url").value = qp.get("url");
+  if (qp.get("name")) {
+    $("product-name").value = qp.get("name");
+    $("detail-row").classList.add("open");
+    $("detail-toggle").textContent = "▾ 商品名・特徴を手動入力(任意)";
+  }
+}
+
 function extractProductName(url) {
   try {
     const u = new URL(url);
@@ -846,35 +935,40 @@ const GENRES = {
     pain: ["肌のゆらぎ", "毛穴の目立ち", "乾燥によるくすみ", "朝のメイクノリの悪さ"],
     gain: ["すっぴんに自信が持てる", "鏡を見るのが楽しくなる", "ファンデが薄づきで済む"],
     proof: ["リピート率", "SNSでの口コミ数", "@cosme系の評価"],
-    tag: "#美容 #スキンケア",
+    label: "美容",
+    tags: { big: ["#美容", "#スキンケア"], mid: ["#美容好きさんと繋がりたい", "#垢抜け", "#コスメ購入品", "#美容オタク"], small: ["#時短美容", "#ズボラ美容", "#美容液"] },
   },
   gadget: {
     re: /(gadget|tech|pc|keyboard|mouse|charger|earbuds|camera|ガジェット|家電|充電)/i,
     pain: ["毎日の細かいストレス", "作業効率の頭打ち", "配線まわりのゴチャつき"],
     gain: ["作業時間が目に見えて減る", "デスクが一気に垢抜ける", "外出先でも困らなくなる"],
     proof: ["レビュー件数", "指名買いの多さ", "再入荷待ちの列"],
-    tag: "#ガジェット #便利グッズ",
+    label: "ガジェット",
+    tags: { big: ["#ガジェット", "#便利グッズ"], mid: ["#ガジェット好きと繋がりたい", "#デスクツアー", "#買ってよかったもの", "#QOL爆上げ"], small: ["#仕事効率化", "#デスク環境", "#ガジェット紹介"] },
   },
   health: {
     re: /(diet|protein|supplement|fitness|gym|sleep|健康|ダイエット|サプリ|睡眠|筋トレ)/i,
     pain: ["続かない習慣", "なかなか落ちない体重", "朝起きられないだるさ"],
     gain: ["体が軽くなる感覚", "服のサイズが変わる", "朝スッと起きられる"],
     proof: ["継続率", "ビフォーアフター投稿の多さ", "専門家の推薦"],
-    tag: "#ダイエット #健康習慣",
+    label: "健康",
+    tags: { big: ["#ダイエット", "#健康習慣"], mid: ["#ダイエット仲間募集", "#痩せる方法", "#ボディメイク", "#習慣化"], small: ["#ダイエット記録", "#宅トレ", "#睡眠改善"] },
   },
   food: {
     re: /(food|coffee|tea|snack|meal|recipe|グルメ|コーヒー|お取り寄せ|レトルト)/i,
     pain: ["マンネリな食卓", "自炊する時間のなさ", "コンビニ飯の罪悪感"],
     gain: ["家がちょっといい店になる", "5分で満足度の高い一食", "手土産で外さなくなる"],
     proof: ["お取り寄せランキング", "リピーターの多さ", "行列のできる実店舗"],
-    tag: "#グルメ #お取り寄せ",
+    label: "グルメ",
+    tags: { big: ["#グルメ", "#お取り寄せ"], mid: ["#おうちごはん", "#お取り寄せグルメ", "#ご褒美", "#簡単レシピ"], small: ["#コーヒー好き", "#暮らしを楽しむ", "#手土産"] },
   },
   generic: {
     re: /$^/,
     pain: ["毎日の地味な悩み", "なんとなくの不便", "時間とお金のムダ"],
     gain: ["生活の質が一段上がる", "使う前に戻れなくなる", "周りに勧めたくなる"],
     proof: ["レビュー評価", "リピート率", "SNSでの話題性"],
-    tag: "#おすすめ #QOL爆上げ",
+    label: "汎用",
+    tags: { big: ["#おすすめ", "#買ってよかった"], mid: ["#QOL爆上げ", "#暮らし", "#購入品紹介", "#便利"], small: ["#知らなきゃ損", "#プチプラ", "#愛用品"] },
   },
 };
 function detectGenre(url, name, features) {
@@ -886,104 +980,133 @@ function detectGenre(url, name, features) {
 }
 
 /* ================= script templates (with variations) ================= */
+function pickN(arr, n) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) { const j = rand(0, i); [a[i], a[j]] = [a[j], a[i]]; }
+  return a.slice(0, n);
+}
+function buildTags(genre, name, typeTag) {
+  const nameTag = name === "この商品" ? "おすすめ" : name.replace(/\s+/g, "");
+  const t = GENRES[genre].tags;
+  return ["#PR", "#" + nameTag, ...t.big, ...pickN(t.mid, 3), ...pickN(t.small, 2), typeTag].join(" ");
+}
+/* 尺ごとのレイアウト: 15秒は「フック→核心→CTA」まで圧縮 */
+const LAYOUTS = {
+  55: { tcs: ["0-2秒", "2-10秒", "10-25秒", "25-40秒", "40-55秒"], parts: ["hook", "m1", "m2", "m3", "cta"] },
+  30: { tcs: ["0-2秒", "2-12秒", "12-24秒", "24-30秒"], parts: ["hook", "m2", "m3", "cta"] },
+  15: { tcs: ["0-2秒", "2-10秒", "10-15秒"], parts: ["hook", "core", "cta"] },
+};
 function buildScript(type, ctx) {
   const { name, features } = ctx;
+  const duration = ctx.duration || 55;
   const v = GENRES[ctx.genre];
   const pain = pick(v.pain), gain = pick(v.gain), proof = pick(v.proof);
   const featTxt = features ? `ポイントは「${features}」。` : "";
-  const nameTag = name === "この商品" ? "おすすめ" : name.replace(/\s+/g, "");
-  const tags = `#PR #ショート #${nameTag} ${v.tag}`;
+  let title, parts, ctas, core, typeTag;
 
   if (type === "a") {
-    return {
-      title: pick([
-        "「まだ損してるの?」問題提起型",
-        "「それ、放置してない?」問題提起型",
-        "「9割が知らない」問題提起型",
-      ]),
-      lines: [
-        ["0-2秒", "フック", pick([
-          `え、まだ${pain}で消耗してるの?`,
-          `${pain}、実は放置するほど損してます。`,
-          `【気づいてない人多すぎ】${pain}の正体。`,
-        ])],
-        ["2-8秒", "共感", pick([
-          `毎日がんばってるのに変わらない…それ、やり方じゃなくて「道具」の問題かも。`,
-          `私も半年悩みました。調べまくって行き着いた答えがこれ。`,
-          `コメント欄でも同じ悩みが殺到。でも解決策はシンプルでした。`,
-        ])],
-        ["8-20秒", "解決提示", `そこで見つけたのが ${name}。${featTxt}使い始めてから体感が全然違う。`],
-        ["20-40秒", "デモ", pick([
-          `実際の使用シーンを3カットでテンポよく。不満→使用→変化の順で見せる。`,
-          `画面テロップで「before→after」を数字つきで提示。${proof}も添えると説得力UP。`,
-          `手元アップ→引きの順で使用感を見せ、${gain}ことを一言で言い切る。`,
-        ])],
-        ["40-55秒", "CTA", pick([
-          `詳細はプロフィールのリンクから。特典があるうちにチェック。`,
-          `迷ってる人はコメントに「🔥」だけ押して。リンクはプロフに。`,
-          `保存しておくと後で見返せます。リンクは概要欄へ。`,
-        ])],
-      ],
-      tags: tags + " #悩み解決",
+    title = pick([
+      "「まだ損してるの?」問題提起型",
+      "「それ、放置してない?」問題提起型",
+      "「9割が知らない」問題提起型",
+    ]);
+    parts = {
+      hook: ["フック", pick([
+        `え、まだ${pain}で消耗してるの?`,
+        `${pain}、実は放置するほど損してます。`,
+        `【気づいてない人多すぎ】${pain}の正体。`,
+      ])],
+      m1: ["共感", pick([
+        `毎日がんばってるのに変わらない…それ、やり方じゃなくて「道具」の問題かも。`,
+        `私も半年悩みました。調べまくって行き着いた答えがこれ。`,
+        `コメント欄でも同じ悩みが殺到。でも解決策はシンプルでした。`,
+      ])],
+      m2: ["解決提示", `そこで見つけたのが ${name}。${featTxt}使い始めてから体感が全然違う。`],
+      m3: ["デモ", pick([
+        `実際の使用シーンを3カットでテンポよく。不満→使用→変化の順で見せる。`,
+        `画面テロップで「before→after」を数字つきで提示。${proof}も添えると説得力UP。`,
+        `手元アップ→引きの順で使用感を見せ、${gain}ことを一言で言い切る。`,
+      ])],
     };
-  }
-  if (type === "b") {
+    core = "m2";
+    typeTag = "#悩み解決";
+    ctas = [
+      `詳細はプロフィールのリンクから。特典があるうちにチェック。`,
+      `迷ってる人はコメントに「🔥」だけ押して。リンクはプロフに。`,
+      `保存しておくと後で見返せます。リンクは概要欄へ。`,
+      `続きが気になる人はフォローしておいて。明日も出します。`,
+    ];
+  } else if (type === "b") {
     const period = pick(["1週間", "2週間", "1ヶ月"]);
-    return {
-      title: pick([
-        `「${period}でこう変わった」ビフォーアフター型`,
-        `「${period}前の自分に教えたい」ビフォーアフター型`,
-      ]),
-      lines: [
-        ["0-2秒", "フック", pick([
-          `左が${period}前の私。右が今。`,
-          `${period}前の自分に見せたら泣くと思う。`,
-          `たった${period}でここまで変わるとは思わなかった。`,
-        ])],
-        ["2-10秒", "ビフォー", pick([
-          `正直、何を試してもダメだった頃の状態をそのまま見せる。${pain}が一番のストレスだった。`,
-          `過去の写真・記録を出して「盛ってない」ことを示す。`,
-        ])],
-        ["10-20秒", "転機", `変わったきっかけは ${name} をルーティンに入れただけ。${featTxt}`],
-        ["20-40秒", "アフター", pick([
-          `変化を数字か見た目で提示。「たった${period}で」を画面テロップで強調。${gain}のが最高。`,
-          `使用中の様子を早回しで。${proof}のスクショを重ねると信頼感が出る。`,
-        ])],
-        ["40-55秒", "CTA", pick([
-          `同じ悩みの人はコメント欄に「🔥」だけ押して。リンクは概要欄に。`,
-          `やり方の詳細はプロフのリンクにまとめました。`,
-        ])],
-      ],
-      tags: tags + " #ビフォーアフター #検証",
+    title = pick([
+      `「${period}でこう変わった」ビフォーアフター型`,
+      `「${period}前の自分に教えたい」ビフォーアフター型`,
+    ]);
+    parts = {
+      hook: ["フック", pick([
+        `左が${period}前の私。右が今。`,
+        `${period}前の自分に見せたら泣くと思う。`,
+        `たった${period}でここまで変わるとは思わなかった。`,
+      ])],
+      m1: ["ビフォー", pick([
+        `正直、何を試してもダメだった頃の状態をそのまま見せる。${pain}が一番のストレスだった。`,
+        `過去の写真・記録を出して「盛ってない」ことを示す。`,
+      ])],
+      m2: ["転機", `変わったきっかけは ${name} をルーティンに入れただけ。${featTxt}`],
+      m3: ["アフター", pick([
+        `変化を数字か見た目で提示。「たった${period}で」を画面テロップで強調。${gain}のが最高。`,
+        `使用中の様子を早回しで。${proof}のスクショを重ねると信頼感が出る。`,
+      ])],
     };
-  }
-  return {
-    title: pick([
+    core = "m2";
+    typeTag = "#ビフォーアフター";
+    ctas = [
+      `同じ悩みの人はコメント欄に「🔥」だけ押して。リンクは概要欄に。`,
+      `やり方の詳細はプロフのリンクにまとめました。`,
+      `ビフォーに戻りたくないので私は続けます。真似したい人はプロフへ。`,
+    ];
+  } else {
+    title = pick([
       "「ガチで買ってよかったTOP3」ランキング型",
       "「後悔しない買い物TOP3」ランキング型",
-    ]),
-    lines: [
-      ["0-2秒", "フック", pick([
+    ]);
+    parts = {
+      hook: ["フック", pick([
         `今年ガチで買ってよかったものTOP3、いきます。`,
-        `${GENRES[ctx.genre].tag.split(" ")[0].slice(1)}ジャンルで後悔しなかったTOP3を発表。`,
+        `${v.label}ジャンルで後悔しなかったTOP3を発表。`,
         `1000円台〜で人生変わった買い物TOP3。`,
       ])],
-      ["2-12秒", "第3位", pick([
+      m1: ["第3位", pick([
         `定番だけど手堅い選択肢。サラッと紹介してテンポを作る。`,
         `「知ってる人は知ってる」枠。視聴維持のためテンポ重視で15秒以内に。`,
       ])],
-      ["12-24秒", "第2位", pick([
+      m2: ["第2位", pick([
         `意外性のある選択肢。「これは知らなかった」を狙う。`,
         `コスパ枠。価格を先に出して「え、安っ」を取りにいく。`,
       ])],
-      ["24-45秒", "第1位", `${name}。${featTxt}理由は3つ: ①${gain} ②${proof}が桁違い ③リピート確定。ここに尺の半分を使う。`],
-      ["45-55秒", "CTA", pick([
-        `1位のリンクはプロフィールに置いておくね。売り切れ注意。`,
-        `全部の比較表はコメント欄に固定しておきます。`,
-      ])],
-    ],
-    tags: tags + " #ランキング #TOP3",
-  };
+      m3: ["第1位", `${name}。${featTxt}理由は3つ: ①${gain} ②${proof}が桁違い ③リピート確定。ここに尺の半分を使う。`],
+    };
+    core = "m3";
+    typeTag = "#ランキング";
+    ctas = [
+      `1位のリンクはプロフィールに置いておくね。売り切れ注意。`,
+      `全部の比較表はコメント欄に固定しておきます。`,
+      `2位と3位の詳細はフォローしてる人だけに明日出します。`,
+    ];
+  }
+
+  const layout = LAYOUTS[duration] || LAYOUTS[55];
+  const lines = [];
+  layout.parts.forEach((p, i) => {
+    if (p === "cta") return;
+    const [role, txt] = parts[p === "core" ? core : p];
+    lines.push([layout.tcs[i], role, txt]);
+  });
+  const ctaTc = layout.tcs[layout.tcs.length - 1];
+  const [ctaA, ctaB] = pickN(ctas, 2);
+  lines.push([ctaTc, "CTA-A", ctaA], [ctaTc, "CTA-B", ctaB]);
+
+  return { title: `${title}(${duration}秒)`, lines, tags: buildTags(ctx.genre, name, typeTag) };
 }
 function buildAllScripts(ctx) {
   return { a: buildScript("a", ctx), b: buildScript("b", ctx), c: buildScript("c", ctx) };
@@ -991,14 +1114,29 @@ function buildAllScripts(ctx) {
 
 /* ================= Claude API mode (optional) ================= */
 const API_KEY_STORE = "sf_api_key";
+const PROXY_STORE = "sf_proxy";
+const YT_STORE = "sf_yt_key";
+async function fetchPageText(url) {
+  const proxy = localStorage.getItem(PROXY_STORE);
+  if (!proxy) return "";
+  try {
+    const res = await fetch(proxy + encodeURIComponent(url));
+    if (!res.ok) return "";
+    const html = await res.text();
+    return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 3000);
+  } catch { return ""; }
+}
 async function generateViaAPI(ctx) {
   const key = localStorage.getItem(API_KEY_STORE);
   if (!key) return null;
-  const prompt = `あなたは縦型ショート動画(55秒)の放送作家です。以下の商品のアフィリエイト用ショート動画台本を3タイプ作成してください。
+  const pageText = await fetchPageText(ctx.url);
+  const prompt = `あなたは縦型ショート動画(${ctx.duration}秒)の放送作家です。以下の商品のアフィリエイト用ショート動画台本を3タイプ作成してください。尺は${ctx.duration}秒に収まるように。
 
 商品URL: ${ctx.url}
 商品名: ${ctx.name}
-特徴: ${ctx.features || "(不明。URLと商品名から推測)"}
+特徴: ${ctx.features || "(不明。URLと商品名から推測)"}${pageText ? `
+商品ページ本文(抜粋): ${pageText}` : ""}
 
 次のJSONだけを出力してください(説明文なし):
 {"a":{"title":"...問題提起型","lines":[["0-2秒","フック","..."],["2-8秒","共感","..."],["8-20秒","解決提示","..."],["20-40秒","デモ","..."],["40-55秒","CTA","..."]],"tags":"#..."},
@@ -1048,25 +1186,53 @@ if (!localStorage.getItem(HELP_SEEN)) {
 
 $("settings-btn").addEventListener("click", () => {
   $("api-key-input").value = localStorage.getItem(API_KEY_STORE) || "";
+  $("proxy-input").value = localStorage.getItem(PROXY_STORE) || "";
+  $("yt-key-input").value = localStorage.getItem(YT_STORE) || "";
   updateApiStatus();
   openOverlay("settings-overlay");
 });
 function updateApiStatus() {
   const on = !!localStorage.getItem(API_KEY_STORE);
-  $("api-key-status").textContent = on ? "API MODE: ON (claude-sonnet-5)" : "API MODE: OFF (テンプレート生成)";
+  const yt = !!localStorage.getItem(YT_STORE);
+  $("api-key-status").textContent =
+    (on ? "API MODE: ON (claude-sonnet-5)" : "API MODE: OFF (テンプレート生成)") + (yt ? " / YT走査: 実データ" : "");
   $("settings-btn").classList.toggle("on", on);
 }
+function saveOrRemove(store, value) {
+  if (value) localStorage.setItem(store, value); else localStorage.removeItem(store);
+}
 $("api-key-save").addEventListener("click", () => {
-  const v = $("api-key-input").value.trim();
-  if (v) localStorage.setItem(API_KEY_STORE, v);
+  saveOrRemove(API_KEY_STORE, $("api-key-input").value.trim());
+  saveOrRemove(PROXY_STORE, $("proxy-input").value.trim());
+  saveOrRemove(YT_STORE, $("yt-key-input").value.trim());
   updateApiStatus();
+  fetchRealBuzz();
 });
 $("api-key-clear").addEventListener("click", () => {
-  localStorage.removeItem(API_KEY_STORE);
-  $("api-key-input").value = "";
+  [API_KEY_STORE, PROXY_STORE, YT_STORE].forEach(k => localStorage.removeItem(k));
+  ["api-key-input", "proxy-input", "yt-key-input"].forEach(id => $(id).value = "");
   updateApiStatus();
 });
 updateApiStatus();
+
+/* ================= real buzz scan (YouTube Data API, optional) ================= */
+async function fetchRealBuzz() {
+  const key = localStorage.getItem(YT_STORE);
+  if (!key) { realTitles = []; return; }
+  try {
+    const since = new Date(Date.now() - 7 * 864e5).toISOString();
+    const res = await fetch(
+      "https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short" +
+      "&order=viewCount&publishedAfter=" + encodeURIComponent(since) +
+      "&q=%23shorts&regionCode=JP&maxResults=10&key=" + encodeURIComponent(key));
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    realTitles = (data.items || []).map(i => i.snippet && i.snippet.title).filter(Boolean);
+    if (realTitles.length) statusEl.textContent = `実データ走査ON ・ 直近7日の急上昇ショート${realTitles.length}本を取得`;
+  } catch { realTitles = []; }
+}
+fetchRealBuzz();
+setInterval(fetchRealBuzz, 10 * 60 * 1000);
 
 /* ================= schedule (dynamic golden-time slots) ================= */
 function nextSlots(count) {
@@ -1081,17 +1247,74 @@ function nextSlots(count) {
     }
   }
   const dayLabel = ["本日", "翌日", "翌々日", "3日後"];
-  return slots.map(s => `${dayLabel[s.dayOffset]} ${pad(s.h)}:00`);
+  const now2 = jstNow();
+  return slots.map(s => ({
+    label: `${dayLabel[s.dayOffset]} ${pad(s.h)}:00`,
+    // JSTの (今日+dayOffset) h:00 をUTCエポックに変換
+    utc: Date.UTC(now2.getFullYear(), now2.getMonth(), now2.getDate() + s.dayOffset, s.h - 9, 0, 0),
+  }));
 }
+let lastSlots = [];
+const SCHED_PLATFORMS = ["TikTok", "YouTube Shorts", "Reels"];
 function renderSchedule() {
-  const slots = nextSlots(3);
-  const platforms = ["TikTok", "YouTube Shorts", "Reels"];
+  lastSlots = nextSlots(3);
   const el = $("schedule");
   el.innerHTML = `<span class="sched-title">SCHEDULE 投稿予約</span>` +
     ["A", "B", "C"].map((k, i) =>
-      `<span class="sched-slot"><span class="k">${k}</span><span class="platform">${platforms[i]}</span><span class="time">${slots[i]}</span></span>`
-    ).join("");
+      `<span class="sched-slot"><span class="k">${k}</span><span class="platform">${SCHED_PLATFORMS[i]}</span><span class="time">${lastSlots[i].label}</span></span>`
+    ).join("") +
+    `<button class="gbtn" id="ics-btn">📅 予約を.icsで保存</button><button class="gbtn" id="print-btn">🖨 撮影指示書</button>`;
   el.classList.add("visible");
+  $("ics-btn").addEventListener("click", downloadICS);
+  $("print-btn").addEventListener("click", printSheet);
+}
+
+/* ---- .ics ダウンロード(カレンダー/リマインダーに投稿予定を入れる) ---- */
+function icsStamp(ms) {
+  return new Date(ms).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+}
+function downloadICS() {
+  if (!lastSlots.length || !lastCtx) return;
+  const esc = s => String(s).replace(/([,;\\])/g, "\\$1");
+  const events = lastSlots.map((s, i) =>
+    ["BEGIN:VEVENT",
+     `UID:sf-${Date.now()}-${i}@shorts-factory`,
+     `DTSTAMP:${icsStamp(Date.now())}`,
+     `DTSTART:${icsStamp(s.utc)}`,
+     `DTEND:${icsStamp(s.utc + 30 * 60000)}`,
+     `SUMMARY:${esc(`ショート投稿 ${"ABC"[i]}タイプ(${SCHED_PLATFORMS[i]}): ${lastCtx.name}`)}`,
+     `DESCRIPTION:${esc(`SHORTS FACTORYで生成した台本を投稿する。商品URL: ${lastCtx.url}`)}`,
+     "BEGIN:VALARM", "TRIGGER:-PT30M", "ACTION:DISPLAY", `DESCRIPTION:${esc("投稿30分前")}`, "END:VALARM",
+     "END:VEVENT"].join("\r\n"));
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//SHORTS FACTORY//JP", ...events, "END:VCALENDAR"].join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+  a.download = "shorts-factory-schedule.ics";
+  a.click();
+  URL.revokeObjectURL(a.href);
+  statusEl.textContent = ".ics を保存しました ・ カレンダーに読み込むと投稿予定が入ります";
+}
+
+/* ---- 撮影指示書(印刷→PDF保存) ---- */
+function printSheet() {
+  if (!lastScripts || !lastCtx) return;
+  const sheet = $("print-sheet");
+  const names = { a: "A 問題提起型", b: "B ビフォーアフター型", c: "C ランキング型" };
+  const now = jstNow();
+  const escH = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  let html = `<h1>SHORTS FACTORY 撮影指示書</h1>
+    <div class="meta">商品: ${escH(lastCtx.name)} ／ 尺: ${lastCtx.duration || 55}秒 ／ URL: ${escH(lastCtx.url)} ／ 出力: ${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())}</div>`;
+  for (const t of ["a", "b", "c"]) {
+    const s = lastScripts[t];
+    html += `<h2>${names[t]} — ${escH(s.title)}</h2>
+      <table><tr><th>秒数</th><th>役割</th><th>セリフ</th><th>テロップ案</th><th>カット・画角</th><th>素材メモ</th></tr>` +
+      s.lines.map(([tc, role, txt]) =>
+        `<tr><td>${escH(tc)}</td><td>${escH(role)}</td><td>${escH(txt)}</td><td>${escH(txt.slice(0, 13))}${txt.length > 13 ? "…" : ""}</td><td class="blank"></td><td class="blank"></td></tr>`
+      ).join("") +
+      `</table><div class="tagline">${escH(s.tags)}</div>`;
+  }
+  sheet.innerHTML = html;
+  window.print();
 }
 
 /* ================= history ================= */
@@ -1161,7 +1384,7 @@ btn.addEventListener("click", async () => {
   const features = $("product-features").value.trim();
   const name = manualName || extractProductName(url);
   const genre = detectGenre(url, name, features);
-  const ctx = { url, name, features, genre };
+  const ctx = { url, name, features, genre, duration };
   lastCtx = ctx;
 
   setStep(1);
@@ -1169,7 +1392,7 @@ btn.addEventListener("click", async () => {
   await wait(1200);
 
   setStep(2);
-  const genreLabel = { beauty: "美容", gadget: "ガジェット", health: "健康", food: "グルメ", generic: "汎用" }[genre];
+  const genreLabel = GENRES[genre].label;
   statusEl.textContent = `構成を解析中 ... ジャンル判定: ${genreLabel} / バズ${buzzCount}本の型と照合`;
   await wait(1400);
 
