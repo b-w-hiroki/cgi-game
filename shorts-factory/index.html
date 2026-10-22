@@ -748,7 +748,7 @@
       <div class="settings-note">
         キーを設定すると、台本生成が <b>claude-sonnet-5</b> による本物のAI生成に切り替わります(商品URL・商品名・特徴をもとに生成)。
         未設定・生成失敗時は内蔵テンプレートで生成します。<br>
-        <b>注意:</b> キーはこの端末のブラウザ(localStorage)にのみ保存され、外部には送信されません(Anthropic APIへの直接リクエストを除く)。
+        <b>注意:</b> APIキーはこのタブを開いている間だけメモリに保持されます。Anthropic APIとYouTube APIへのリクエストに使用します。共有端末では使用後にクリアしてください。
         共有PCでは設定しないでください。
       </div>
       <div class="field" style="margin-top:14px">
@@ -1116,6 +1116,11 @@ function buildAllScripts(ctx) {
 const API_KEY_STORE = "sf_api_key";
 const PROXY_STORE = "sf_proxy";
 const YT_STORE = "sf_yt_key";
+// Delete legacy persisted credentials without loading their values.
+localStorage.removeItem(API_KEY_STORE);
+localStorage.removeItem(YT_STORE);
+let apiKey = "";
+let youtubeKey = "";
 async function fetchPageText(url) {
   const proxy = localStorage.getItem(PROXY_STORE);
   if (!proxy) return "";
@@ -1128,7 +1133,7 @@ async function fetchPageText(url) {
   } catch { return ""; }
 }
 async function generateViaAPI(ctx) {
-  const key = localStorage.getItem(API_KEY_STORE);
+  const key = apiKey;
   if (!key) return null;
   const pageText = await fetchPageText(ctx.url);
   const prompt = `あなたは縦型ショート動画(${ctx.duration}秒)の放送作家です。以下の商品のアフィリエイト用ショート動画台本を3タイプ作成してください。尺は${ctx.duration}秒に収まるように。
@@ -1185,15 +1190,15 @@ if (!localStorage.getItem(HELP_SEEN)) {
 }
 
 $("settings-btn").addEventListener("click", () => {
-  $("api-key-input").value = localStorage.getItem(API_KEY_STORE) || "";
+  $("api-key-input").value = apiKey || "";
   $("proxy-input").value = localStorage.getItem(PROXY_STORE) || "";
-  $("yt-key-input").value = localStorage.getItem(YT_STORE) || "";
+  $("yt-key-input").value = youtubeKey || "";
   updateApiStatus();
   openOverlay("settings-overlay");
 });
 function updateApiStatus() {
-  const on = !!localStorage.getItem(API_KEY_STORE);
-  const yt = !!localStorage.getItem(YT_STORE);
+  const on = !!apiKey;
+  const yt = !!youtubeKey;
   $("api-key-status").textContent =
     (on ? "API MODE: ON (claude-sonnet-5)" : "API MODE: OFF (テンプレート生成)") + (yt ? " / YT走査: 実データ" : "");
   $("settings-btn").classList.toggle("on", on);
@@ -1202,14 +1207,16 @@ function saveOrRemove(store, value) {
   if (value) localStorage.setItem(store, value); else localStorage.removeItem(store);
 }
 $("api-key-save").addEventListener("click", () => {
-  saveOrRemove(API_KEY_STORE, $("api-key-input").value.trim());
+  apiKey = $("api-key-input").value.trim();
   saveOrRemove(PROXY_STORE, $("proxy-input").value.trim());
-  saveOrRemove(YT_STORE, $("yt-key-input").value.trim());
+  youtubeKey = $("yt-key-input").value.trim();
   updateApiStatus();
   fetchRealBuzz();
 });
 $("api-key-clear").addEventListener("click", () => {
-  [API_KEY_STORE, PROXY_STORE, YT_STORE].forEach(k => localStorage.removeItem(k));
+  apiKey = "";
+  youtubeKey = "";
+  localStorage.removeItem(PROXY_STORE);
   ["api-key-input", "proxy-input", "yt-key-input"].forEach(id => $(id).value = "");
   updateApiStatus();
 });
@@ -1217,7 +1224,7 @@ updateApiStatus();
 
 /* ================= real buzz scan (YouTube Data API, optional) ================= */
 async function fetchRealBuzz() {
-  const key = localStorage.getItem(YT_STORE);
+  const key = youtubeKey;
   if (!key) { realTitles = []; return; }
   try {
     const since = new Date(Date.now() - 7 * 864e5).toISOString();
@@ -1397,7 +1404,7 @@ btn.addEventListener("click", async () => {
   await wait(1400);
 
   setStep(3);
-  const apiOn = !!localStorage.getItem(API_KEY_STORE);
+  const apiOn = !!apiKey;
   statusEl.textContent = apiOn
     ? `claude-sonnet-5 で台本を生成中 ... 「${name}」× 3タイプ`
     : `台本を生成中 ... 「${name}」× 3タイプ同時生成`;
