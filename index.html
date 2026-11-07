@@ -265,7 +265,7 @@
         </button>
         <div style="margin-top: 12px; font-size: 10px; color:#808080;">
           ※ このゲームはブラウザ上で動作するCGI風テキストRPGです<br>
-          推奨環境：Internet Explorer 6.0 以上
+          まずは1階で戦闘 → 街で回復・装備 → セーブ。<br>セーブはこのブラウザ内だけに保存されます。
         </div>
       </div>
     </div>
@@ -1093,19 +1093,41 @@ function continueAfterDeath() {
 
 // ===== セーブ/ロード =====
 function saveGame() {
-  localStorage.setItem('retroRPG_save', JSON.stringify({ G, dungeonFloor }));
-  setMsg('town-message', '💾 セーブしました！');
-  setStatus('セーブ完了');
+  if (!G) return;
+  try {
+    localStorage.setItem('retroRPG_save', JSON.stringify({ G, dungeonFloor }));
+    setMsg('town-message', '💾 セーブしました！');
+    setStatus('セーブ完了');
+  } catch {
+    setMsg('town-message', 'セーブできませんでした。保存容量やブラウザ設定を確認してください。現在の冒険は続けられます。');
+    setStatus('セーブ失敗');
+  }
 }
-
+function parseSave(raw) {
+  const data = JSON.parse(raw), g = data && data.G;
+  if (!g || typeof g.name !== 'string' || g.name.length > 100 || !Object.hasOwn(CLASSES, g.cls)) throw Error('invalid save');
+  const stats = ['lv','exp','maxHp','hp','maxMp','mp','baseAtk','baseDef','baseSpd','baseMag','gold','maxFloor'];
+  if (!stats.every(key => Number.isFinite(g[key]) && g[key] >= 0) || g.lv < 1 || g.maxHp < 1 || g.hp > g.maxHp || g.mp > g.maxMp) throw Error('invalid stats');
+  if (!Array.isArray(g.items) || !g.items.every(item => item && getItem(item.id) && Number.isInteger(item.qty) && item.qty >= 0)) throw Error('invalid items');
+  if (!WEAPONS.some(w => w.id === g.weapon) || !ARMORS.some(a => a.id === g.armor)) throw Error('invalid equipment');
+  const floor = data.dungeonFloor ?? 1;
+  if (!Number.isInteger(floor) || floor < 1) throw Error('invalid floor');
+  return {G:g, dungeonFloor:floor};
+}
 function loadGame() {
-  const raw = localStorage.getItem('retroRPG_save');
-  if (!raw) { alert('セーブデータが見つかりません。'); return; }
-  const data = JSON.parse(raw);
-  G = data.G;
-  dungeonFloor = data.dungeonFloor || 1;
+  let data;
+  try {
+    const raw = localStorage.getItem('retroRPG_save');
+    if (!raw) { alert('セーブデータが見つかりません。'); return; }
+    data = parseSave(raw);
+  } catch {
+    alert('セーブデータを読み込めませんでした。元のデータは変更していません。');
+    return;
+  }
+  G = data.G; dungeonFloor = data.dungeonFloor;
+  if (G.hp <= 0) { continueAfterDeath(); return; }
   showScreen('screen-town');
-  setMsg('town-message', '💾 セーブデータを読み込みました。\nおかえり、' + G.name + '！');
+  setMsg('town-message', '💾 セーブデータを読み込みました。おかえり！');
   setStatus('ロード完了');
 }
 </script>

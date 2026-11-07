@@ -1,0 +1,8 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const h=fs.readFileSync('index.html','utf8'),script=h.slice(h.indexOf('const CLASSES'),h.lastIndexOf('</script>'));
+function ctx(){const c=vm.createContext({document:{querySelectorAll:()=>[],getElementById:()=>({style:{},innerHTML:''})},localStorage:{getItem:()=>null},alert(){},console});vm.runInContext(script,c);return c;}
+test('valid old save loads',()=>{const c=ctx();const a=vm.runInContext("parseSave(JSON.stringify({G:newGame('hero','warrior'),dungeonFloor:2}))",c);assert.equal(a.G.lv,1);assert.equal(a.dungeonFloor,2)});
+test('invalid save rejected',()=>{const c=ctx();for(const s of ['{','null','{}',JSON.stringify({G:{cls:'constructor'}})])assert.throws(()=>c.parseSave(s))});
+test('load failure preserves current game',()=>{const c=ctx();vm.runInContext("G=newGame('keep','mage')",c);c.localStorage.getItem=()=>'{';c.loadGame();assert.equal(vm.runInContext('G.name',c),'keep')});
+test('write failure reported without changing game',()=>{const c=ctx();vm.runInContext("G=newGame('keep','mage');setMsg=()=>{};setStatus=x=>{globalThis.lastStatus=x}",c);c.localStorage.setItem=()=>{throw Error('full')};c.saveGame();assert.equal(c.lastStatus,'セーブ失敗');assert.equal(vm.runInContext('G.name',c),'keep')});
+test('zero hp loads through defeat recovery',()=>{const c=ctx();vm.runInContext("showScreen=()=>{};setMsg=()=>{};setStatus=()=>{}",c);c.localStorage.getItem=()=>vm.runInContext("JSON.stringify({G:{...newGame('hero','warrior'),hp:0},dungeonFloor:4})",c);c.loadGame();assert.equal(vm.runInContext('dungeonFloor',c),1);assert.equal(vm.runInContext('G.hp',c),25)});
