@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="Shift_JIS">
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>★ 勇者の試練 ～CGI冒険記～ ★</title>
 <style>
   body {
@@ -222,6 +222,29 @@
     color: #000;
     margin-top: 4px;
   }
+
+  /* Keep the original desktop-window identity; enlarge controls for touch. */
+  *, *::before, *::after { box-sizing: border-box; }
+  .btn { min-height: 44px; white-space: normal; }
+  .btn:focus-visible, .class-select-box:focus-visible, .input-field:focus-visible {
+    outline: 3px solid #000080; outline-offset: 2px;
+  }
+  .class-select-box { font-family: inherit; line-height: 1.5; }
+  .class-select-box.selected span { color: #fff !important; }
+  #screen-battle .btn-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  #screen-battle .btn-row .btn { width: 100%; margin: 0; }
+  @media (max-width: 480px) {
+    body { padding: 4px; font-size: 14px; }
+    .content { padding: 8px; }
+    .input-field { max-width: 100%; min-height: 44px; font-size: 16px; }
+    #screen-create table, #screen-create tbody, #screen-create tr, #screen-create td { display: block; width: 100% !important; }
+    #screen-create td { padding: 4px 0; }
+    .class-select-box { min-width: 0; flex: 1 1 80px; margin: 0; padding: 8px 4px; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn-row .btn { flex: 1 1 120px; margin: 0; }
+    .shop-item-row { flex-wrap: wrap; gap: 4px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .blink { animation: none; } }
 </style>
 </head>
 <body>
@@ -283,13 +306,13 @@
             <td style="font-weight:bold; padding-top:8px;">職　業：</td>
             <td style="padding-top:8px;">
               <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <div class="class-select-box selected" id="cls-warrior" onclick="selectClass('warrior')">
+                <div class="class-select-box selected" id="cls-warrior" role="button" tabindex="0" aria-pressed="true" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectClass('warrior')}" onclick="selectClass('warrior')">
                   ⚔️ 戦士<br><span style="font-size:10px; color:#808080;">HP高め<br>物理攻撃得意</span>
                 </div>
-                <div class="class-select-box" id="cls-mage" onclick="selectClass('mage')">
+                <div class="class-select-box" id="cls-mage" role="button" tabindex="0" aria-pressed="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectClass('mage')}" onclick="selectClass('mage')">
                   🔮 魔法使い<br><span style="font-size:10px; color:#808080;">MP高め<br>魔法攻撃得意</span>
                 </div>
-                <div class="class-select-box" id="cls-thief" onclick="selectClass('thief')">
+                <div class="class-select-box" id="cls-thief" role="button" tabindex="0" aria-pressed="false" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectClass('thief')}" onclick="selectClass('thief')">
                   🗡️ 盗賊<br><span style="font-size:10px; color:#808080;">素早さ高め<br>先制攻撃得意</span>
                 </div>
               </div>
@@ -580,8 +603,9 @@ function setStatus(msg) {
 // ===== キャラ作成 =====
 function selectClass(cls) {
   selectedClass = cls;
-  document.querySelectorAll('.class-select-box').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.class-select-box').forEach(el => { el.classList.remove('selected'); el.setAttribute('aria-pressed', 'false'); });
   document.getElementById('cls-' + cls).classList.add('selected');
+  document.getElementById('cls-' + cls).setAttribute('aria-pressed', 'true');
 }
 
 function createCharacter() {
