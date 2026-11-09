@@ -36,15 +36,15 @@
 |---|---|
 | `index.html` | ゲーム本体（単一ファイル完結） |
 | `shorts-factory/` | 縦型ショート動画の台本生成ツール群（本体とは別のツール集。詳細は `shorts-factory/README.md`） |
-| `test/keys.test.cjs` | `shorts-factory/index.html` のAPIキー取り扱いに関するテスト |
-| `.github/workflows/offline-test.yml` | プルリクエスト／`main` へのプッシュでテストを実行するCI |
+| `test/*.test.cjs` | ゲーム本体の戦闘・保存・モバイル表示と、同梱ツールのAPIキー取り扱いの回帰テスト |
+| `.github/workflows/regression.yml` | プルリクエスト／`main` へのプッシュ／手動でゲーム本体を含む回帰を実行するCI |
 
 ## テスト
 
 Node.js 22 で実行します。
 
 ```bash
-node --test test/keys.test.cjs
+node --test test/*.test.cjs
 ```
 
 ## 備考
@@ -54,3 +54,7 @@ node --test test/keys.test.cjs
 
 ## 保存の検証
 保存失敗は成功扱いせず、壊れた保存の読込で現在の冒険と元データを変更しません。HP0の保存は敗北復帰と同じ処理で街へ戻します。`node --test test/*.test.cjs` で回帰確認。初見3分の体験は未実測です。
+
+## 継続的な回帰確認
+
+`node --test test/*.test.cjs`を PR と `main` への push で実行します。回帰 workflow は手動でも実行できます。Pages の配信成功とは別に、対象コミットの回帰結果を確認してください。実端末・実利用者の評価や外部サービスの本番状態は、この自動テストの保証範囲に含みません。
